@@ -246,6 +246,15 @@ Dat script speelt een volledige quiz via de server (spelers laten binnenkomen,
 quiz starten, rad draaien, alle rondes doorlopen, resetten) en meldt onderaan
 `ALLES OK` als elke stap klopt.
 
+En om de **online** versie na te kijken (bereikbaarheid, websockets, QR-adres,
+quizmastercode, spelers zonder code):
+
+```bash
+npm run check:online -- https://pubquiz-k69m.onrender.com
+```
+
+Dat raakt een lopende quiz niet aan: de testspeler meldt zich meteen weer af.
+
 ## 9. Kleine dingen die handig zijn om te weten
 
 - **Herladen mag.** Je rol en spelersnaam worden lokaal onthouden; je komt terug
