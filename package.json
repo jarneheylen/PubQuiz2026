@@ -16,7 +16,8 @@
     "start": "node server/index.js",
     "quiz": "npm run build && node server/index.js",
     "typecheck": "tsc --noEmit",
-    "test:flow": "node scripts/flow-test.mjs"
+    "test:flow": "node scripts/flow-test.mjs",
+    "check:online": "node scripts/check-online.mjs"
   },
   "dependencies": {
     "express": "^4.21.2",
