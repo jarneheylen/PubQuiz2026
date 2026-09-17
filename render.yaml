@@ -1,0 +1,29 @@
+# Configuratie voor gratis hosting op Render.com
+#
+# Render leest dit bestand automatisch wanneer je de repo verbindt ("Blueprint").
+# Je hoeft dus niets manueel in te stellen behalve de quizmastercode.
+#
+#  - runtime node, gratis plan, regio Frankfurt (dichtst bij ons)
+#  - Render bouwt de client en start daarna de quizserver
+#  - de poort komt van Render zelf via de omgevingsvariabele PORT
+#  - QUIZMASTER_CODE vraagt Render aan jou bij het aanmaken (sync: false),
+#    zodat die code niet in deze repo staat
+#
+# Let op bij het gratis plan: na 15 minuten zonder bezoekers valt de dienst in
+# slaap. De eerste die daarna de link opent, wacht ongeveer een halve minuut.
+# Bij zo'n herstart is de lobby leeg en melden de spelers zich opnieuw aan.
+
+services:
+  - type: web
+    name: pubquiz
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: node server/index.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: QUIZMASTER_CODE
+        sync: false

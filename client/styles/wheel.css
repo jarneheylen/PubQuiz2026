@@ -1,0 +1,152 @@
+/* ------------------------------------------------------------------
+   Het drankrad. De rotatie zelf komt uit React (transform + duration);
+   hier zit het uitzicht: koperen rand, glans, naald en de uitbolling.
+   ------------------------------------------------------------------ */
+
+.wheel {
+  position: relative;
+  width: var(--wheel-size, 360px);
+  max-width: 88vw;
+  aspect-ratio: 1;
+  margin: 0 auto;
+  padding: 14px;
+  isolation: isolate;
+}
+
+.wheel__glow {
+  position: absolute;
+  inset: -12%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(231, 154, 37, 0.35), transparent 65%);
+  opacity: 0.6;
+  transition: opacity 0.4s ease;
+}
+
+.wheel--spinning .wheel__glow {
+  opacity: 1;
+  animation: glow-breathe 1.2s ease-in-out infinite;
+}
+
+@keyframes glow-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+/* De naald bovenaan: hier stopt de drank. */
+.wheel__pointer {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  z-index: 3;
+  width: 30px;
+  height: 40px;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, #ffe3a8, var(--amber) 55%, #a4650f);
+  clip-path: polygon(50% 100%, 0 0, 100% 0);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6));
+}
+
+.wheel--spinning .wheel__pointer {
+  animation: pointer-tick 0.12s ease-in-out infinite alternate;
+}
+
+@keyframes pointer-tick {
+  from {
+    transform: translateX(-50%) rotate(-3deg);
+  }
+  to {
+    transform: translateX(-50%) rotate(3deg);
+  }
+}
+
+.wheel__disc {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  /* Traag uitbollen: snel weg, lang naijlen. Dat maakt de spanning. */
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.08, 0.82, 0.02, 1);
+  will-change: transform;
+  box-shadow:
+    0 0 0 10px #2b1d12,
+    0 0 0 13px var(--gold),
+    0 0 0 18px #23180f,
+    0 26px 60px rgba(0, 0, 0, 0.6);
+}
+
+.wheel__disc svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+
+.wheel__rim {
+  fill: #23180f;
+}
+
+.wheel__segment {
+  stroke: rgba(35, 24, 15, 0.55);
+  stroke-width: 0.4;
+}
+
+.wheel__ring {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.14);
+  stroke-width: 1.4;
+}
+
+.wheel__emoji {
+  font-size: 6px;
+}
+
+.wheel__label {
+  font-family: var(--font-display);
+  font-size: 5.6px;
+  letter-spacing: 0.12px;
+  text-transform: uppercase;
+}
+
+/* Naaf in het midden, met een glans over het hele rad. */
+.wheel__hub {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 22%;
+  height: 22%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #4a3627, #1a120c);
+  border: 3px solid var(--gold);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.6), inset 0 2px 6px rgba(255, 255, 255, 0.12);
+  font-size: clamp(1.1rem, 4vw, 1.8rem);
+  pointer-events: none;
+}
+
+/* Glans: een zachte lichtval over de bovenste helft van het rad. */
+.wheel::after {
+  content: '';
+  position: absolute;
+  inset: 14px;
+  z-index: 1;
+  border-radius: 50%;
+  background: linear-gradient(
+    200deg,
+    rgba(255, 255, 255, 0.16) 0%,
+    rgba(255, 255, 255, 0.04) 32%,
+    transparent 55%
+  );
+  pointer-events: none;
+}
