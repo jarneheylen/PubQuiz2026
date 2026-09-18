@@ -94,25 +94,36 @@ const foutieveCode = await ask(socket, Events.QM_JOIN, { code: 'zomaar-proberen'
 check(foutieveCode?.ok === false, `verkeerde code geweigerd (${foutieveCode?.error || 'geen antwoord'})`);
 
 // ---------------------------------------------------------------- speler
+// De gastenlijst ligt vast (config/quiz.config.js): een testspeler "joint"
+// dus niet met een vrije naam, maar claimt een plek uit die lijst - net als
+// een echte speler. Is die plek al bezet door iemand die echt meespeelt, dan
+// wordt de poging gewoon geweigerd (geen risico dat we iemand eruit gooien).
 console.log('\n5. Spelers kunnen meedoen (zonder code)');
-const spelers = state.players.length;
-const player = io(target, { transports: ['websocket'] });
-await new Promise((resolve) => player.on('connect', resolve));
-const joined = await new Promise((resolve) => {
-  player.on(Events.JOINED, resolve);
-  player.on(Events.ERROR, () => resolve(null));
-  player.emit(Events.PLAYER_JOIN, { name: 'Controle' });
-  setTimeout(() => resolve(null), 8000);
-});
-check(Boolean(joined), joined ? `testspeler "${joined.name}" is binnen` : 'testspeler kon niet meedoen');
+const testnaam = state.players.find((p) => !p.connected)?.name;
+if (!testnaam) {
+  check(false, 'geen vrije plek op de gastenlijst om te testen (iedereen is al verbonden)');
+} else {
+  const player = io(target, { transports: ['websocket'] });
+  await new Promise((resolve) => player.on('connect', resolve));
+  const joined = await new Promise((resolve) => {
+    player.on(Events.JOINED, resolve);
+    player.on(Events.ERROR, () => resolve(null));
+    player.emit(Events.PLAYER_JOIN, { name: testnaam });
+    setTimeout(() => resolve(null), 8000);
+  });
+  check(Boolean(joined), joined ? `testspeler "${joined.name}" is binnen` : `testspeler "${testnaam}" kon niet meedoen`);
 
-player.disconnect();
-const after = await new Promise((resolve) => {
-  socket.once(Events.STATE, resolve);
-  setTimeout(() => resolve(null), 6000);
-});
-if (after) {
-  check(after.players.length === spelers, `testspeler netjes weer weg (${after.players.length} speler(s) over)`);
+  player.disconnect();
+  const after = await new Promise((resolve) => {
+    socket.once(Events.STATE, resolve);
+    setTimeout(() => resolve(null), 6000);
+  });
+  if (after) {
+    check(
+      after.players.find((p) => p.name === testnaam)?.connected === false,
+      `testspeler "${testnaam}" netjes weer weg`,
+    );
+  }
 }
 
 console.log(`\n${failures.length === 0 ? 'ALLES OK - de quiz staat klaar online.' : `${failures.length} FOUT(EN): ${failures.join(' / ')}`}\n`);
