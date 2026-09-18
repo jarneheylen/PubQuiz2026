@@ -75,26 +75,42 @@ if (quizmasterCode) {
   indringer.disconnect();
 }
 
-// Twee spelers laten binnenkomen.
+// Twee spelers uit de vaste gastenlijst laten binnenkomen.
+const NAAM1 = 'Yentl Stroobants';
+const NAAM2 = 'Franc Balliu';
 const p1 = await connect('speler1');
-p1.emit(Events.PLAYER_JOIN, { name: 'Tom' });
+p1.emit(Events.PLAYER_JOIN, { name: NAAM1 });
 const p2 = await connect('speler2');
-p2.emit(Events.PLAYER_JOIN, { name: 'Sarah' });
+p2.emit(Events.PLAYER_JOIN, { name: NAAM2 });
 
-// Dubbele naam moet geweigerd worden.
+// Een naam die al bezet is (ook met andere hoofdletters) moet geweigerd worden.
 const p3 = await connect('speler3');
 const duplicatePromise = new Promise((resolve) => {
   p3.once(Events.ERROR, () => resolve(true));
   setTimeout(() => resolve(false), 3000);
 });
-p3.emit(Events.PLAYER_JOIN, { name: 'tom' });
+p3.emit(Events.PLAYER_JOIN, { name: NAAM1.toLowerCase() });
+
+// Een naam die niet op de vaste lijst staat moet geweigerd worden.
+const p4 = await connect('speler4');
+const onbekendePromise = new Promise((resolve) => {
+  p4.once(Events.ERROR, () => resolve(true));
+  setTimeout(() => resolve(false), 3000);
+});
+p4.emit(Events.PLAYER_JOIN, { name: 'Iemand Onbekend' });
 
 log('\n1. Lobby');
 qm.emit(Events.QM_RESET, { keepPlayers: true });
-let state = await waitFor(qm, (s) => s.phase === 'lobby' && s.players.length >= 2, 'lobby met spelers');
+let state = await waitFor(
+  qm,
+  (s) => s.phase === 'lobby' && s.players.filter((p) => p.connected).length >= 2,
+  'lobby met spelers',
+);
 expect(state.status === 'Quiz klaar om te starten', `status: "${state.status}"`);
-expect(await duplicatePromise, 'dubbele naam wordt geweigerd');
-log(`  spelers: ${state.players.map((p) => p.name).join(', ')}`);
+expect(state.players.length === 8, `vaste gastenlijst van 8 spelers (${state.players.length})`);
+expect(await duplicatePromise, 'al bezette naam wordt geweigerd');
+expect(await onbekendePromise, 'naam buiten de vaste lijst wordt geweigerd');
+log(`  aangemeld: ${state.players.filter((p) => p.connected).map((p) => p.name).join(', ')}`);
 
 log('\n2. Quiz starten');
 qm.emit(Events.QM_START_QUIZ);
@@ -174,18 +190,29 @@ expect(state.phase === 'quiz_finished', 'quiz staat nog op afgelopen (speler kon
 log('\n6. Nieuwe quiz');
 qm.emit(Events.QM_RESET, { keepPlayers: true });
 state = await waitFor(qm, (s) => s.phase === 'lobby', 'terug in lobby');
-expect(state.players.length >= 2, 'spelers blijven verbonden na reset');
+expect(
+  state.players.filter((p) => p.connected).length >= 2,
+  'spelers blijven verbonden na reset (vaste lijst, geen nieuwe aanmelding nodig)',
+);
 expect(state.rounds.every((r) => r.status === 'pending' && !r.wheelResult), 'rondes zijn gereset');
 
 log('\n7. Speler verlaat de lobby');
-const before = state.players.length;
+const beforeConnected = state.players.filter((p) => p.connected).length;
 p2.disconnect();
-state = await waitFor(qm, (s) => s.players.length === before - 1, 'speler verdwijnt uit de lobby');
-expect(true, `spelers over: ${state.players.map((p) => p.name).join(', ')}`);
+state = await waitFor(
+  qm,
+  (s) => s.players.filter((p) => p.connected).length === beforeConnected - 1,
+  'speler valt weg uit de lobby',
+);
+expect(
+  state.players.some((p) => p.name === NAAM2 && !p.connected),
+  `${NAAM2} blijft op de vaste lijst staan, enkel niet meer verbonden`,
+);
 
 log(`\n${failures.length === 0 ? 'ALLES OK' : `${failures.length} FOUT(EN): ${failures.join(' / ')}`}`);
 
 qm.disconnect();
 p1.disconnect();
 p3.disconnect();
+p4.disconnect();
 process.exit(failures.length === 0 ? 0 : 1);

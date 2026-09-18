@@ -31,6 +31,8 @@ interface QuizContextValue {
   clearMessage: () => void;
   /** Verschil tussen serverklok en eigen klok, voor het synchroon tonen van het rad. */
   serverOffset: number;
+  /** Geheime data enkel voor dit toestel, uit een ronde of minigame (bv. de kaart van de deler). */
+  roundPrivate: unknown;
 
   chooseRole: (role: Role) => void;
   leaveRole: () => void;
@@ -55,9 +57,18 @@ interface QuizContextValue {
     nextRound: () => void;
     resetQuiz: () => void;
     kickPlayer: (playerId: string) => void;
+    /** Start een extra spel (bv. Fuck the Dealer), los van de rondevolgorde. */
+    startMinigame: (type: string) => void;
+    stopMinigame: () => void;
   };
   /** Rondetype-specifieke actie van een speler (voor latere rondetypes). */
   sendRoundAction: (action: string, payload?: unknown) => void;
+  /** Rondetype-specifieke actie van de quizmaster. */
+  sendQuizmasterRoundAction: (action: string, payload?: unknown) => void;
+  /** Speler-actie binnen het lopende extra spel. */
+  sendMinigameAction: (action: string, payload?: unknown) => void;
+  /** Quizmaster-actie binnen het lopende extra spel. */
+  sendQuizmasterMinigameAction: (action: string, payload?: unknown) => void;
 }
 
 const QuizContext = createContext<QuizContextValue | null>(null);
@@ -71,6 +82,7 @@ export function QuizProvider({ children }: { children: ReactNode }) {
   const [serverOffset, setServerOffset] = useState(0);
   const [quizmasterReady, setQuizmasterReady] = useState(false);
   const [quizmasterCodeError, setQuizmasterCodeError] = useState<string | null>(null);
+  const [roundPrivate, setRoundPrivate] = useState<unknown>(null);
 
   // In refs zodat de socket-listeners altijd de actuele waarde zien.
   const roleRef = useRef(role);
@@ -145,12 +157,15 @@ export function QuizProvider({ children }: { children: ReactNode }) {
       });
     };
 
+    const onRoundPrivate = (payload: unknown) => setRoundPrivate(payload);
+
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     socket.on(Events.STATE, onState);
     socket.on(Events.ERROR, onError);
     socket.on(Events.JOINED, onJoined);
     socket.on(Events.KICKED, onKicked);
+    socket.on(Events.ROUND_PRIVATE, onRoundPrivate);
 
     if (socket.connected) announce();
 
@@ -161,6 +176,7 @@ export function QuizProvider({ children }: { children: ReactNode }) {
       socket.off(Events.ERROR, onError);
       socket.off(Events.JOINED, onJoined);
       socket.off(Events.KICKED, onKicked);
+      socket.off(Events.ROUND_PRIVATE, onRoundPrivate);
     };
   }, [announce]);
 
@@ -215,14 +231,28 @@ export function QuizProvider({ children }: { children: ReactNode }) {
       startRound: () => socket.emit(Events.QM_START_ROUND),
       endRound: () => socket.emit(Events.QM_END_ROUND),
       nextRound: () => socket.emit(Events.QM_NEXT_ROUND),
-      resetQuiz: () => socket.emit(Events.QM_RESET, { keepPlayers: true }),
+      resetQuiz: () => socket.emit(Events.QM_RESET),
       kickPlayer: (id: string) => socket.emit(Events.QM_KICK_PLAYER, { playerId: id }),
+      startMinigame: (type: string) => socket.emit(Events.QM_START_MINIGAME, { type }),
+      stopMinigame: () => socket.emit(Events.QM_STOP_MINIGAME),
     }),
     [],
   );
 
   const sendRoundAction = useCallback((action: string, payload?: unknown) => {
     socket.emit(Events.ROUND_ACTION, { action, payload });
+  }, []);
+
+  const sendQuizmasterRoundAction = useCallback((action: string, payload?: unknown) => {
+    socket.emit(Events.QM_ROUND_ACTION, { action, payload });
+  }, []);
+
+  const sendMinigameAction = useCallback((action: string, payload?: unknown) => {
+    socket.emit(Events.MINIGAME_ACTION, { action, payload });
+  }, []);
+
+  const sendQuizmasterMinigameAction = useCallback((action: string, payload?: unknown) => {
+    socket.emit(Events.QM_MINIGAME_ACTION, { action, payload });
   }, []);
 
   const me = useMemo(() => {
@@ -239,6 +269,7 @@ export function QuizProvider({ children }: { children: ReactNode }) {
       message,
       clearMessage: () => setMessage(null),
       serverOffset,
+      roundPrivate,
       chooseRole,
       leaveRole,
       joinAsPlayer,
@@ -248,6 +279,9 @@ export function QuizProvider({ children }: { children: ReactNode }) {
       submitQuizmasterCode,
       actions,
       sendRoundAction,
+      sendQuizmasterRoundAction,
+      sendMinigameAction,
+      sendQuizmasterMinigameAction,
     }),
     [
       state,
@@ -256,6 +290,7 @@ export function QuizProvider({ children }: { children: ReactNode }) {
       me,
       message,
       serverOffset,
+      roundPrivate,
       chooseRole,
       leaveRole,
       joinAsPlayer,
@@ -265,6 +300,9 @@ export function QuizProvider({ children }: { children: ReactNode }) {
       submitQuizmasterCode,
       actions,
       sendRoundAction,
+      sendQuizmasterRoundAction,
+      sendMinigameAction,
+      sendQuizmasterMinigameAction,
     ],
   );
 

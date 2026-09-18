@@ -44,6 +44,8 @@ export interface RoundTypeModule {
   description?: string;
   QuizmasterView?: ComponentType<QuizmasterRoundProps>;
   PlayerView?: ComponentType<PlayerRoundProps>;
+  /** Weergave op het publieke scherm (HDMI); valt terug op een algemeen scherm zonder dit. */
+  ScreenView?: ComponentType<RoundViewProps>;
 }
 
 const registry = new Map<string, RoundTypeModule>();

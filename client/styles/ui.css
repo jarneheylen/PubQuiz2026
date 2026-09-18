@@ -127,6 +127,44 @@
   font-size: 0.94rem;
 }
 
+/* ------------------------------------------------------------ scorebord */
+
+.scoreboard {
+  display: grid;
+  gap: 10px;
+}
+
+.scoreboard__row {
+  display: grid;
+  gap: 4px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.scoreboard__row:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.scoreboard__name {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  letter-spacing: 0.03em;
+  color: var(--cream);
+}
+
+.scoreboard__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+}
+
+.scoreboard__stat {
+  color: var(--text-soft);
+  font-size: 0.86rem;
+  white-space: nowrap;
+}
+
 /* --------------------------------------------------------------- badges */
 
 .status {

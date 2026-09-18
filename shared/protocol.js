@@ -59,9 +59,28 @@ export const Events = {
   QM_NEXT_ROUND: 'quizmaster:next-round',
   QM_RESET: 'quizmaster:reset-quiz',
   QM_KICK_PLAYER: 'quizmaster:kick-player',
+  /** client -> server: rondetype-specifieke quizmaster-actie */
+  QM_ROUND_ACTION: 'quizmaster:round-action',
 
-  /** client -> server: rondetype-specifieke actie (voor latere rondetypes) */
+  /** client -> server: rondetype-specifieke actie van een speler */
   ROUND_ACTION: 'round:action',
+  /**
+   * server -> client: rondetype- of minigame-specifieke info die enkel voor
+   * deze speler bestemd is (bv. de geheime kaart van de deler in Fuck the
+   * Dealer). Gaat nooit naar iedereen, enkel naar het socket dat het opstuurt.
+   */
+  ROUND_PRIVATE: 'round:private',
+
+  /**
+   * Extra spelletjes (bv. Fuck the Dealer) die de quizmaster los van de
+   * rondevolgorde kan starten/stoppen, zoveel keer als hij wil.
+   */
+  QM_START_MINIGAME: 'quizmaster:start-minigame',
+  QM_STOP_MINIGAME: 'quizmaster:stop-minigame',
+  /** client -> server: quizmaster-actie binnen het lopende extra spel */
+  QM_MINIGAME_ACTION: 'quizmaster:minigame-action',
+  /** client -> server: speler-actie binnen het lopende extra spel */
+  MINIGAME_ACTION: 'minigame:action',
 };
 
 /**

@@ -4,19 +4,17 @@
  * met wat de quizmaster doet.
  */
 
-import { useState } from 'react';
 import { useQuiz } from '../state/QuizProvider';
 import { ConnectionBadge, StatusBadge } from '../components/StatusBadge';
 import { PlayerList } from '../components/PlayerList';
 import { RoundInfo, DrinkResult } from '../components/RoundInfo';
 import { Wheel } from '../components/Wheel';
 import { getRoundType } from '../rounds';
-import { storage } from '../lib/storage';
+import { getMinigameType } from '../minigames';
 
 export function PlayerScreen() {
-  const { state, connected, me, joinAsPlayer, leaveRole, leaveQuiz, serverOffset, sendRoundAction } =
+  const { state, connected, me, joinAsPlayer, leaveRole, leaveQuiz, serverOffset, sendRoundAction, sendMinigameAction } =
     useQuiz();
-  const [name, setName] = useState(() => storage.getPlayerName() || '');
 
   if (!state) {
     return <div className="loading">Verbinden met de quiz...</div>;
@@ -24,12 +22,6 @@ export function PlayerScreen() {
 
   // ------------------------------------------------------------- aanmelden
   if (!me) {
-    const trimmed = name.trim();
-    const canJoin = trimmed.length >= 2 && connected;
-    const submit = () => {
-      if (canJoin) joinAsPlayer(trimmed);
-    };
-
     return (
       <div className="player player--join">
         <div className="player__top">
@@ -38,48 +30,23 @@ export function PlayerScreen() {
         </div>
 
         <header className="join__header">
-          <h1 className="join__title">Doe mee</h1>
+          <h1 className="join__title">Wie ben jij?</h1>
           <p className="join__subtitle">{state.quiz.name}</p>
         </header>
 
-        <form
-          className="join__form"
-          onSubmit={(event) => {
-            event.preventDefault();
-            submit();
-          }}
-        >
-          <label className="join__label" htmlFor="player-name">
-            Hoe heet je?
-          </label>
-          <input
-            id="player-name"
-            className="join__input"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            onKeyDown={(event) => {
-              // Niet elke gsm-toetsenbord stuurt het formulier zelf door.
-              if (event.key === 'Enter') {
-                event.preventDefault();
-                submit();
-              }
-            }}
-            placeholder="Je naam"
-            maxLength={20}
-            autoComplete="off"
-            autoCapitalize="words"
-            enterKeyHint="go"
-          />
-          <button type="submit" className="btn btn--primary btn--huge" disabled={!canJoin}>
-            DEELNEMEN
-          </button>
-        </form>
-
-        <div className="join__players">
-          <h2 className="join__players-title">
-            Al aan tafel <span className="card__count">{state.players.length}</span>
-          </h2>
-          <PlayerList players={state.players} emptyText="Jij kan de eerste zijn." />
+        <div className="join__picker">
+          {state.players.map((player) => (
+            <button
+              key={player.id}
+              type="button"
+              className="join__picker-btn"
+              disabled={!connected || player.connected}
+              onClick={() => joinAsPlayer(player.name)}
+            >
+              {player.name}
+              {player.connected && <span className="join__picker-tag">al binnen</span>}
+            </button>
+          ))}
         </div>
 
         <button type="button" className="btn btn--ghost" onClick={leaveRole}>
@@ -90,6 +57,30 @@ export function PlayerScreen() {
   }
 
   // ------------------------------------------------------- aangemeld speler
+
+  // Een extra spel (bv. Fuck the Dealer) loopt los van de rondevolgorde en
+  // neemt het scherm volledig over zolang het draait.
+  if (state.minigame) {
+    const minigameType = getMinigameType(state.minigame.type);
+    const MinigamePlayerView = minigameType?.PlayerView;
+    return (
+      <div className="player player--minigame">
+        <header className="player__header">
+          <div className="player__me">
+            <span className="player__me-label">Speler</span>
+            <strong className="player__me-name">{me.name}</strong>
+          </div>
+          <ConnectionBadge connected={connected} />
+        </header>
+        {MinigamePlayerView ? (
+          <MinigamePlayerView minigame={state.minigame} state={state} me={me} sendAction={sendMinigameAction} />
+        ) : (
+          <p className="panel__text">Onbekend spel "{state.minigame.type}".</p>
+        )}
+      </div>
+    );
+  }
+
   const round = state.currentRound;
   const roundType = round ? getRoundType(round.type) : null;
   const PlayerView = roundType?.PlayerView;

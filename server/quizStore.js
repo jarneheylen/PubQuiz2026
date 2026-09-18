@@ -15,15 +15,38 @@ import {
 } from '../shared/protocol.js';
 import {
   quizName,
+  players as playerRoster,
   drinks as drinkConfig,
   rounds as roundConfig,
   wheelSpinDurationMs,
 } from '../config/quiz.config.js';
+import { getRoundTypeHandler } from './rounds/index.js';
+import { getMinigameTypeHandler } from './minigames/index.js';
 
 /** Aantal volledige omwentelingen van de radanimatie. */
 const WHEEL_TURNS = 5;
 
-const MAX_NAME_LENGTH = 20;
+/** Stabiele, leesbare id op basis van de naam (blijft gelijk over herstarts heen). */
+function slugify(name) {
+  return (
+    name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '') || 'speler'
+  );
+}
+
+function buildPlayers() {
+  return playerRoster.map((name) => ({
+    id: slugify(name),
+    name,
+    connected: false,
+    joinedAt: 0,
+    score: 0,
+  }));
+}
 
 function buildRounds() {
   return roundConfig.map((round, index) => ({
@@ -46,6 +69,7 @@ function buildDrinks() {
     name: drink.name || `Drank ${index + 1}`,
     emoji: drink.emoji || '',
     color: drink.color || '#c98a2b',
+    abv: typeof drink.abv === 'number' ? drink.abv : 0,
   }));
 }
 
@@ -65,13 +89,19 @@ export function createQuizStore() {
   const listeners = new Set();
 
   /** @type {Map<string, { id: string, name: string, connected: boolean, joinedAt: number, score: number }>} */
-  const players = new Map();
+  const players = new Map(buildPlayers().map((player) => [player.id, player]));
   /** socket.id -> playerId */
   const socketToPlayer = new Map();
   /** playerId -> socket.id van de meest recente verbinding van die speler */
   const playerToSocket = new Map();
   /** sockets die de quizmaster-rol claimen */
   const quizmasterSockets = new Set();
+
+  /** @type {import('../shared/types').DrinkLogEntry[]} */
+  let drinkLog = [];
+
+  /** @type {{ id: string, type: string, data: Record<string, unknown> } | null} */
+  let minigame = null;
 
   let spinTimer = null;
 
@@ -95,12 +125,16 @@ export function createQuizStore() {
     const base = {
       quiz,
       phase,
-      players: [...players.values()].sort((a, b) => a.joinedAt - b.joinedAt),
+      // Vaste volgorde (config/quiz.config.js), niet op aanmeldmoment: de lijst
+      // ligt vooraf vast en een Map bewaart de invoegvolgorde toch al correct.
+      players: [...players.values()],
       rounds,
       currentRoundIndex,
       currentRound: currentRound(),
       drinks,
       wheel,
+      drinkLog,
+      minigame,
       quizmasterOnline: quizmasterSockets.size > 0,
       serverTime: Date.now(),
     };
@@ -134,51 +168,39 @@ export function createQuizStore() {
 
   // ---------------------------------------------------------------- spelers
 
+  /**
+   * De gastenlijst ligt vast (config/quiz.config.js): een speler "joint" dus
+   * niet met een vrije naam, maar claimt een van de vaste plekken. Zo kan
+   * iedereen na een weggevallen verbinding gewoon opnieuw zijn naam aantikken
+   * en verdergaan waar hij gebleven was - ook op een ander toestel.
+   */
   function joinAsPlayer({ name, playerId, socketId }) {
-    const cleanName = String(name || '').trim().slice(0, MAX_NAME_LENGTH);
-    if (cleanName.length < 2) {
-      return fail('Geef een naam van minstens 2 tekens in.');
-    }
-
-    // Terugkerende speler (herladen pagina of even geen netwerk).
-    const existing = playerId ? players.get(playerId) : null;
-    if (existing) {
-      existing.name = cleanName;
-      existing.connected = true;
-      socketToPlayer.set(socketId, existing.id);
-      playerToSocket.set(existing.id, socketId);
+    // Terugkerende speler op hetzelfde toestel (herladen, even geen netwerk).
+    const byId = playerId ? players.get(playerId) : null;
+    if (byId) {
+      byId.connected = true;
+      socketToPlayer.set(socketId, byId.id);
+      playerToSocket.set(byId.id, socketId);
       emit();
-      return { ok: true, player: existing };
+      return { ok: true, player: byId };
     }
 
-    const sameName = [...players.values()].find(
+    const cleanName = String(name || '').trim();
+    const match = [...players.values()].find(
       (player) => player.name.toLowerCase() === cleanName.toLowerCase(),
     );
-    if (sameName) {
-      // Zelfde naam, maar die speler is offline: dan is dit wellicht dezelfde
-      // persoon op een nieuw toestel. Laat hem die plaats overnemen.
-      if (sameName.connected) {
-        return fail(`De naam "${cleanName}" is al in gebruik. Kies een andere.`);
-      }
-      sameName.connected = true;
-      socketToPlayer.set(socketId, sameName.id);
-      playerToSocket.set(sameName.id, socketId);
-      emit();
-      return { ok: true, player: sameName };
+    if (!match) {
+      return fail(`"${cleanName}" staat niet op de spelerslijst.`);
     }
-
-    const player = {
-      id: randomUUID(),
-      name: cleanName,
-      connected: true,
-      joinedAt: Date.now(),
-      score: 0,
-    };
-    players.set(player.id, player);
-    socketToPlayer.set(socketId, player.id);
-    playerToSocket.set(player.id, socketId);
+    if (match.connected) {
+      return fail(`${match.name} is al aangemeld op een ander toestel.`);
+    }
+    match.connected = true;
+    match.joinedAt = match.joinedAt || Date.now();
+    socketToPlayer.set(socketId, match.id);
+    playerToSocket.set(match.id, socketId);
     emit();
-    return { ok: true, player };
+    return { ok: true, player: match };
   }
 
   function handleDisconnect(socketId) {
@@ -193,22 +215,19 @@ export function createQuizStore() {
       const isLatestSocket = playerToSocket.get(playerId) === socketId;
       if (player && isLatestSocket) {
         playerToSocket.delete(playerId);
-        // In de lobby verdwijnt een speler die weggaat volledig; tijdens de
-        // quiz blijft de naam staan (de verbinding kan zo terugkomen).
-        if (phase === QuizPhase.LOBBY) {
-          players.delete(playerId);
-        } else {
-          player.connected = false;
-        }
+        // De speler blijft op de vaste lijst staan: enkel de verbinding valt weg,
+        // zodat hij zijn naam later gewoon opnieuw kan aantikken.
+        player.connected = false;
       }
     }
     emit();
   }
 
+  /** Stuurt een speler naar het aanmeldscherm; zijn plek op de lijst blijft bestaan. */
   function kickPlayer(playerId) {
     const player = players.get(playerId);
-    if (!player) return fail('Die speler bestaat niet (meer).');
-    players.delete(playerId);
+    if (!player) return fail('Die speler bestaat niet.');
+    player.connected = false;
     playerToSocket.delete(playerId);
     for (const [socketId, id] of socketToPlayer.entries()) {
       if (id === playerId) socketToPlayer.delete(socketId);
@@ -228,6 +247,11 @@ export function createQuizStore() {
     return playerId ? players.get(playerId) || null : null;
   }
 
+  /** Socket-id van de meest recente verbinding van een speler, of null. */
+  function getSocketIdForPlayer(playerId) {
+    return playerToSocket.get(playerId) || null;
+  }
+
   // ------------------------------------------------------------ quizverloop
 
   function enterRoundIntro(index) {
@@ -243,7 +267,9 @@ export function createQuizStore() {
 
   function startQuiz() {
     if (phase !== QuizPhase.LOBBY) return fail('De quiz is al gestart.');
-    if (players.size === 0) return fail('Er zijn nog geen spelers aangemeld.');
+    if ([...players.values()].every((player) => !player.connected)) {
+      return fail('Er zijn nog geen spelers aangemeld.');
+    }
     if (rounds.length === 0) return fail('Er zijn geen rondes geconfigureerd.');
     enterRoundIntro(0);
     return ok();
@@ -303,6 +329,7 @@ export function createQuizStore() {
     if (!round) return fail('Geen actieve ronde.');
     round.status = RoundStatus.ACTIVE;
     phase = QuizPhase.ROUND_ACTIVE;
+    getRoundTypeHandler(round.type)?.onRoundStart?.({ round, state: getState() });
     emit();
     return ok();
   }
@@ -313,6 +340,7 @@ export function createQuizStore() {
     if (!round) return fail('Geen actieve ronde.');
     round.status = RoundStatus.ENDED;
     phase = QuizPhase.ROUND_ENDED;
+    getRoundTypeHandler(round.type)?.onRoundEnd?.({ round, state: getState() });
     emit();
     return ok();
   }
@@ -331,21 +359,51 @@ export function createQuizStore() {
     return ok();
   }
 
-  /** Nieuwe quizsessie: alles terug naar de lobby, spelers blijven verbonden. */
-  function resetQuiz({ keepPlayers = true } = {}) {
+  /** Nieuwe quizsessie: alles terug naar de lobby. De spelerslijst ligt vast. */
+  function resetQuiz() {
     clearSpinTimer();
     quiz = { id: randomUUID(), name: quizName, createdAt: Date.now() };
     rounds = buildRounds();
     currentRoundIndex = -1;
     phase = QuizPhase.LOBBY;
     wheel = idleWheel();
-    if (!keepPlayers) {
-      players.clear();
-      socketToPlayer.clear();
-      playerToSocket.clear();
-    } else {
-      for (const player of players.values()) player.score = 0;
+    drinkLog = [];
+    if (minigame) {
+      getMinigameTypeHandler(minigame.type)?.onEnd?.({ minigame });
+      minigame = null;
     }
+    for (const player of players.values()) player.score = 0;
+    emit();
+    return ok();
+  }
+
+  /** Rondetypes melden hiermee wie iets moest drinken, voor het scorebord. */
+  function recordDrink(entry) {
+    drinkLog.push({ id: randomUUID(), createdAt: Date.now(), ...entry });
+    emit();
+  }
+
+  // -------------------------------------------------------- extra spelletjes
+
+  /**
+   * Los van de rondevolgorde: de quizmaster kan dit zo vaak starten als hij
+   * wil, ongeacht in welke fase de eigenlijke quiz zich bevindt.
+   */
+  function startMinigame(type) {
+    if (minigame) return fail('Er loopt al een extra spel. Sluit dat eerst af.');
+    const handler = getMinigameTypeHandler(type);
+    if (!handler) return fail(`Onbekend spel "${type}".`);
+    minigame = { id: randomUUID(), type, data: {} };
+    handler.onStart?.({ minigame, state: getState() });
+    emit();
+    return ok();
+  }
+
+  function stopMinigame() {
+    if (!minigame) return fail('Er loopt geen extra spel.');
+    const handler = getMinigameTypeHandler(minigame.type);
+    handler?.onEnd?.({ minigame });
+    minigame = null;
     emit();
     return ok();
   }
@@ -361,6 +419,8 @@ export function createQuizStore() {
     handleDisconnect,
     kickPlayer,
     getPlayerBySocket,
+    getSocketIdForPlayer,
+    recordDrink,
     // quizverloop
     startQuiz,
     spinWheel,
@@ -368,5 +428,8 @@ export function createQuizStore() {
     endRound,
     nextRound,
     resetQuiz,
+    // extra spelletjes
+    startMinigame,
+    stopMinigame,
   };
 }

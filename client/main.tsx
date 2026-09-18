@@ -7,6 +7,8 @@ import './styles/theme.css';
 import './styles/ui.css';
 import './styles/wheel.css';
 import './styles/screens.css';
+import './styles/screen.css';
+import './styles/fuck-the-dealer.css';
 
 const container = document.getElementById('root');
 if (!container) throw new Error('Geen #root element gevonden in index.html');

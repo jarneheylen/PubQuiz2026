@@ -11,8 +11,10 @@ import { PlayerList } from '../components/PlayerList';
 import { RoundInfo, DrinkResult } from '../components/RoundInfo';
 import { RoundProgress } from '../components/RoundProgress';
 import { JoinInfo } from '../components/JoinInfo';
+import { Scoreboard } from '../components/Scoreboard';
 import { Wheel } from '../components/Wheel';
 import { getRoundType } from '../rounds';
+import { getMinigameType } from '../minigames';
 import { storage } from '../lib/storage';
 import { playRoundStart } from '../lib/sound';
 
@@ -38,6 +40,7 @@ export function QuizmasterScreen() {
   const QuizmasterView = roundType?.QuizmasterView;
   const nextRound = state.rounds[state.currentRoundIndex + 1] || null;
   const playedRounds = state.rounds.filter((item) => item.status === 'ended').length;
+  const onlineCount = state.players.filter((player) => player.connected).length;
 
   const toggleSound = () => {
     const next = !sound;
@@ -52,6 +55,30 @@ export function QuizmasterScreen() {
         : 'Nieuwe quizsessie starten? De huidige quiz gaat verloren, spelers blijven verbonden.';
     if (window.confirm(question)) actions.resetQuiz();
   };
+
+  // Een extra spel (bv. Fuck the Dealer) loopt los van de rondevolgorde: zodra
+  // het draait, neemt het scherm volledig over. De quiz zelf blijft ondertussen
+  // precies staan waar hij was.
+  if (state.minigame) {
+    const minigameType = getMinigameType(state.minigame.type);
+    const MinigameQuizmasterView = minigameType?.QuizmasterView;
+    return (
+      <div className="qm qm--minigame">
+        <div className="qm__grid">
+          <main className="qm__stage qm__stage--minigame">
+            {MinigameQuizmasterView ? (
+              <MinigameQuizmasterView minigame={state.minigame} state={state} players={state.players} />
+            ) : (
+              <p className="stage__text">Onbekend spel "{state.minigame.type}".</p>
+            )}
+          </main>
+          <aside className="qm__side">
+            <Scoreboard players={state.players} drinkLog={state.drinkLog} />
+          </aside>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="qm">
@@ -74,6 +101,16 @@ export function QuizmasterScreen() {
             title={sound ? 'Geluid uitzetten' : 'Geluid aanzetten'}
           >
             {sound ? '🔊' : '🔇'}
+          </button>
+          <a className="btn btn--ghost" href="/scherm" target="_blank" rel="noopener">
+            🖥️ Groot scherm
+          </a>
+          <button
+            type="button"
+            className="btn btn--ghost"
+            onClick={() => actions.startMinigame('fuck-the-dealer')}
+          >
+            🃏 Fuck the Dealer
           </button>
           <button type="button" className="btn btn--ghost" onClick={confirmReset}>
             Nieuwe quiz
@@ -125,8 +162,8 @@ export function QuizmasterScreen() {
               <span className="stage__eyebrow">Lobby</span>
               <h2 className="stage__title">QUIZ LOBBY</h2>
               <p className="stage__text">
-                {state.players.length === 0
-                  ? 'Wachten op spelers. Zodra iemand zich aanmeldt, verschijnt de naam hier.'
+                {onlineCount === 0
+                  ? 'Wachten op spelers. Zodra iemand zijn naam aantikt, zie je dat hier.'
                   : 'Iedereen binnen? Dan mag de quiz beginnen.'}
               </p>
               <PlayerList players={state.players} onKick={actions.kickPlayer} />
@@ -134,11 +171,11 @@ export function QuizmasterScreen() {
                 type="button"
                 className="btn btn--primary btn--huge"
                 onClick={actions.startQuiz}
-                disabled={state.players.length === 0}
+                disabled={onlineCount === 0}
               >
                 START QUIZ
               </button>
-              {state.players.length === 0 && (
+              {onlineCount === 0 && (
                 <p className="stage__hint">Er is minstens een speler nodig om te starten.</p>
               )}
             </div>
@@ -265,6 +302,8 @@ export function QuizmasterScreen() {
               <PlayerList players={state.players} onKick={actions.kickPlayer} />
             </div>
           )}
+
+          <Scoreboard players={state.players} drinkLog={state.drinkLog} />
 
           <div className="card">
             <h3 className="card__title">Verloop van de quiz</h3>

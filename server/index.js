@@ -20,6 +20,7 @@ import { Server } from 'socket.io';
 import { createQuizStore } from './quizStore.js';
 import { attachSocketHandlers } from './socket.js';
 import { getJoinUrls, createQrDataUrl } from './network.js';
+import { setActiveStore, setActiveIo } from './rounds/index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.join(__dirname, '..');
@@ -38,6 +39,8 @@ const io = new Server(server, {
 });
 
 const store = createQuizStore();
+setActiveStore(store);
+setActiveIo(io);
 attachSocketHandlers(io, store);
 
 /**

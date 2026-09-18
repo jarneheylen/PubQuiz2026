@@ -5,4 +5,11 @@
 
 import './manual.js';
 
-export { getRoundTypeHandler, listRoundTypes } from './registry.js';
+export {
+  getRoundTypeHandler,
+  listRoundTypes,
+  setActiveStore,
+  getActiveStore,
+  setActiveIo,
+  getActiveIo,
+} from './registry.js';

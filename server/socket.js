@@ -5,6 +5,7 @@
 
 import { Events } from '../shared/protocol.js';
 import { getRoundTypeHandler } from './rounds/index.js';
+import { getMinigameTypeHandler } from './minigames/index.js';
 import { isCodeRequired, isCodeValid } from './quizmasterCode.js';
 
 /**
@@ -80,6 +81,24 @@ export function attachSocketHandlers(io, store) {
         playerId: result.player.id,
         name: result.player.name,
       });
+
+      // Sommige rondetypes/minigames hebben speler-specifieke geheimen (bv. de
+      // kaart van de deler in Fuck the Dealer); die missen anders een herlaadbeurt.
+      const state = store.getState();
+      const round = state.currentRound;
+      const roundHandler = round ? getRoundTypeHandler(round.type) : null;
+      let privatePayload = roundHandler?.getPrivateState?.({ round, state, player: result.player });
+      if (privatePayload == null && state.minigame) {
+        const minigameHandler = getMinigameTypeHandler(state.minigame.type);
+        privatePayload = minigameHandler?.getPrivateState?.({
+          minigame: state.minigame,
+          state,
+          player: result.player,
+        });
+      }
+      if (privatePayload != null) {
+        socket.emit(Events.ROUND_PRIVATE, privatePayload);
+      }
     });
 
     // -------------------------------------------------- quizmaster-bediening
@@ -90,9 +109,7 @@ export function attachSocketHandlers(io, store) {
     socket.on(Events.QM_END_ROUND, () => runQuizmasterAction(() => store.endRound()));
     socket.on(Events.QM_NEXT_ROUND, () => runQuizmasterAction(() => store.nextRound()));
 
-    socket.on(Events.QM_RESET, (payload = {}) =>
-      runQuizmasterAction(() => store.resetQuiz({ keepPlayers: payload.keepPlayers !== false })),
-    );
+    socket.on(Events.QM_RESET, () => runQuizmasterAction(() => store.resetQuiz()));
 
     socket.on(Events.QM_KICK_PLAYER, (payload = {}) => {
       if (!guardQuizmaster()) return;
@@ -114,7 +131,29 @@ export function attachSocketHandlers(io, store) {
       }
     });
 
-    // ------------------------------------- rondetype-specifieke acties (later)
+    // ------------------------------------------ rondetype-specifieke acties
+
+    socket.on(Events.QM_ROUND_ACTION, (payload = {}) => {
+      if (!guardQuizmaster()) return;
+      const state = store.getState();
+      const round = state.currentRound;
+      if (!round) return;
+
+      const handler = getRoundTypeHandler(round.type);
+      if (!handler || typeof handler.onQuizmasterAction !== 'function') return;
+
+      const result = handler.onQuizmasterAction({
+        round,
+        state,
+        action: payload.action,
+        payload: payload.payload,
+      });
+      if (result && !result.ok) {
+        socket.emit(Events.ERROR, { message: result.error });
+        return;
+      }
+      store.touch();
+    });
 
     socket.on(Events.ROUND_ACTION, (payload = {}) => {
       const state = store.getState();
@@ -129,6 +168,57 @@ export function attachSocketHandlers(io, store) {
 
       handler.onPlayerAction({
         round,
+        state,
+        player,
+        action: payload.action,
+        payload: payload.payload,
+      });
+      store.touch();
+    });
+
+    // ------------------------------------------------------ extra spelletjes
+
+    socket.on(Events.QM_START_MINIGAME, (payload = {}) =>
+      runQuizmasterAction(() => store.startMinigame(payload.type)),
+    );
+
+    socket.on(Events.QM_STOP_MINIGAME, () => runQuizmasterAction(() => store.stopMinigame()));
+
+    socket.on(Events.QM_MINIGAME_ACTION, (payload = {}) => {
+      if (!guardQuizmaster()) return;
+      const state = store.getState();
+      const minigame = state.minigame;
+      if (!minigame) return;
+
+      const handler = getMinigameTypeHandler(minigame.type);
+      if (!handler || typeof handler.onQuizmasterAction !== 'function') return;
+
+      const result = handler.onQuizmasterAction({
+        minigame,
+        state,
+        action: payload.action,
+        payload: payload.payload,
+      });
+      if (result && !result.ok) {
+        socket.emit(Events.ERROR, { message: result.error });
+        return;
+      }
+      store.touch();
+    });
+
+    socket.on(Events.MINIGAME_ACTION, (payload = {}) => {
+      const state = store.getState();
+      const minigame = state.minigame;
+      if (!minigame) return;
+
+      const handler = getMinigameTypeHandler(minigame.type);
+      if (!handler || typeof handler.onPlayerAction !== 'function') return;
+
+      const player = store.getPlayerBySocket(socket.id);
+      if (!player) return;
+
+      handler.onPlayerAction({
+        minigame,
         state,
         player,
         action: payload.action,

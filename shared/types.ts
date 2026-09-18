@@ -22,6 +22,8 @@ export interface Drink {
   name: string;
   emoji: string;
   color: string;
+  /** Alcoholpercentage, enkel gebruikt voor het scorebord. */
+  abv: number;
 }
 
 export interface Player {
@@ -75,6 +77,42 @@ export interface Quiz {
   createdAt: number;
 }
 
+/**
+ * Eén moment waarop iemand iets moest drinken, voor het scorebord. Rondetypes
+ * melden dit zelf (server/rounds/*.js) - zo blijft het scorebord generiek en
+ * werkt het automatisch mee met nieuwe rondetypes.
+ */
+export interface DrinkLogEntry {
+  id: string;
+  playerId: string;
+  /** Enkel gevuld als de drank uit een genummerde ronde komt, niet uit een extra spel. */
+  roundNumber?: number;
+  /** 'shot' voor een sterke drank van het rad, 'beer' voor bier bij slokken. */
+  kind: 'shot' | 'beer';
+  /** Aantal shots (meestal 1) of aantal slokken bier. */
+  amount: number;
+  drinkId?: string;
+  drinkName?: string;
+  drinkEmoji?: string;
+  /** Alcoholpercentage van de shot (enkel bij kind 'shot'). */
+  abv?: number;
+  /** Korte, leesbare reden, bv. "Foute gok". */
+  reason: string;
+  createdAt: number;
+}
+
+/**
+ * Een extra spel (bv. Fuck the Dealer) dat de quizmaster los van de
+ * rondevolgorde start/stopt, onbeperkt vaak. `null` zolang er geen loopt.
+ */
+export interface MinigameState {
+  /** Wisselt bij elke nieuwe start, zodat clients een vers spel herkennen. */
+  id: string;
+  type: string;
+  /** Vrije ruimte voor spel-specifieke gegevens. */
+  data: Record<string, unknown>;
+}
+
 export interface QuizState {
   quiz: Quiz;
   phase: QuizPhase;
@@ -86,6 +124,10 @@ export interface QuizState {
   currentRound: Round | null;
   drinks: Drink[];
   wheel: WheelState;
+  /** Alles wat er deze quizavond gedronken is, voor het scorebord. */
+  drinkLog: DrinkLogEntry[];
+  /** Het extra spel dat nu loopt (bv. Fuck the Dealer), of null. */
+  minigame: MinigameState | null;
   quizmasterOnline: boolean;
   /** Vraagt de server een code voor het quizmaster-dashboard? */
   quizmasterCodeRequired: boolean;

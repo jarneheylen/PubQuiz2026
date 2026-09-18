@@ -1,0 +1,619 @@
+/* ------------------------------------------------------------------
+   Minigame 'fuck-the-dealer': speelkaarten, beurtvolgorde en resultaten.
+   Gebruikt op quizmaster-dashboard, spelersgsm en het publieke scherm.
+   Losstaand van de rondes: dit spel voelt bewust als een eigen kroegspel,
+   met een knipogende casino/neon-sfeer bovenop de gewone pubstijl.
+   ------------------------------------------------------------------ */
+
+/* Zodra het spel draait neemt het scherm volledig over. Op het
+   quizmaster-dashboard blijft het scorebord wel zichtbaar in de zijkolom -
+   net degene die moet bijhouden wie wat dronk, mag dat overzicht niet kwijt
+   zijn zolang dit spel loopt. */
+.player--minigame,
+.screen--minigame {
+  display: grid;
+  min-height: 70dvh;
+}
+
+.qm__stage--minigame {
+  display: grid;
+  min-height: 70dvh;
+}
+
+.ftd {
+  display: grid;
+  gap: 20px;
+  justify-items: center;
+  text-align: center;
+}
+
+/* Groen vilt op de achtergrond van het hele spel: het voelt als een tafel. */
+.ftd--quizmaster,
+.ftd--screen {
+  position: relative;
+  padding: 24px 12px;
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(120% 90% at 50% -10%, rgba(231, 154, 37, 0.14), transparent 60%),
+    radial-gradient(90% 70% at 50% 110%, rgba(47, 96, 71, 0.35), transparent 70%),
+    linear-gradient(180deg, rgba(15, 26, 20, 0.55), rgba(10, 8, 6, 0.4));
+  border: 1px solid rgba(233, 201, 127, 0.14);
+}
+
+.ftd__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 720px;
+}
+
+.ftd__title {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  letter-spacing: 0.06em;
+  color: var(--gold);
+  text-shadow: 0 0 18px rgba(231, 154, 37, 0.35);
+}
+
+.ftd-phase {
+  display: grid;
+  gap: 16px;
+  justify-items: center;
+  width: 100%;
+}
+
+.ftd-phase__subtitle {
+  color: var(--text-soft);
+  font-size: 1.05rem;
+}
+
+.ftd-phase__result {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 5vw, 2.2rem);
+  letter-spacing: 0.04em;
+  color: var(--amber-bright);
+}
+
+.ftd-phase__status {
+  color: var(--text-soft);
+  font-size: 1rem;
+}
+
+.ftd-phase__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  letter-spacing: 0.06em;
+  color: var(--gold);
+}
+
+.ftd-phase__shot {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(231, 154, 37, 0.14);
+  border: 1px solid rgba(233, 201, 127, 0.3);
+  color: var(--text-soft);
+  font-size: 0.94rem;
+}
+
+.ftd-table {
+  padding: 8px;
+}
+
+/* ------------------------------------------------------------ speelkaart */
+
+.ftd-card {
+  display: grid;
+  place-items: center;
+  gap: 4px;
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, #fdf6e8, #f0e2c4);
+  box-shadow: var(--shadow);
+  font-family: var(--font-display);
+  animation: ftd-card-in 0.32s ease;
+}
+
+.ftd-card--large {
+  width: 140px;
+  height: 196px;
+}
+
+.ftd-card--small {
+  width: 64px;
+  height: 90px;
+  border-radius: var(--radius-sm);
+}
+
+.ftd-card--empty {
+  background: linear-gradient(180deg, rgba(58, 44, 34, 0.7), rgba(22, 17, 13, 0.8));
+  border: 1px dashed var(--line-strong);
+  box-shadow: none;
+}
+
+.ftd-card--empty .ftd-card__back {
+  font-size: 2.4rem;
+  opacity: 0.5;
+}
+
+.ftd-card__rank {
+  font-size: clamp(1.6rem, 6vw, 2.4rem);
+  line-height: 1;
+}
+
+.ftd-card--small .ftd-card__rank {
+  font-size: 1.2rem;
+}
+
+.ftd-card__suit {
+  font-size: clamp(1.4rem, 5vw, 2rem);
+  line-height: 1;
+}
+
+.ftd-card--small .ftd-card__suit {
+  font-size: 1.1rem;
+}
+
+.ftd-card--red {
+  color: var(--velvet);
+}
+
+.ftd-card--black {
+  color: var(--ink);
+}
+
+@keyframes ftd-card-in {
+  from {
+    transform: rotateY(90deg) scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: rotateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* ------------------------------------------------------ gespeelde kaarten */
+
+.ftd-card-row {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  justify-items: center;
+}
+
+.ftd-card-row__groups {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  max-width: 100%;
+  padding: 4px 4px 8px;
+  scrollbar-width: thin;
+}
+
+.ftd-card-row__group {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  flex: 0 0 auto;
+}
+
+.ftd-card-row__group-stack {
+  position: relative;
+  width: 74px;
+  height: 126px;
+}
+
+.ftd-card-row__group-card {
+  position: absolute;
+  top: calc(var(--stack-index) * 12px);
+  left: calc(var(--stack-index) * 4px);
+}
+
+/* Duidelijk, groot getal boven de stapel: geen geturf nodig. */
+.ftd-card-row__group-count {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--wood-900);
+  background: var(--amber-bright);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.ftd-card-row__group-empty {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 90px;
+  color: var(--text-faint);
+  opacity: 0.35;
+  font-size: 1.3rem;
+}
+
+.ftd-card-row__group-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-faint);
+}
+
+.ftd-card-row__count {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+}
+
+.ftd-card-row__count-value {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: var(--amber-bright);
+  letter-spacing: 0.04em;
+}
+
+/* --------------------------------------------------------- beurtvolgorde */
+
+.ftd-turn-order {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.ftd-turn-order__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(58, 44, 34, 0.55);
+  font-size: 0.92rem;
+  color: var(--text-soft);
+}
+
+.ftd-turn-order__item--current {
+  border-color: var(--amber-bright);
+  background: linear-gradient(180deg, rgba(231, 154, 37, 0.28), rgba(231, 154, 37, 0.1));
+  color: var(--cream);
+  box-shadow: 0 0 0 2px rgba(231, 154, 37, 0.25);
+  transform: scale(1.06);
+}
+
+.ftd-turn-order__item--dealer {
+  border-color: var(--gold);
+}
+
+.ftd-turn-order__marker {
+  font-size: 1.05rem;
+}
+
+.ftd-turn-order__tag {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(233, 201, 127, 0.2);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.ftd-turn-order__tag--current {
+  background: rgba(231, 154, 37, 0.32);
+  color: var(--amber-bright);
+}
+
+.ftd-turn-order__mistakes {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(247, 236, 216, 0.1);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+}
+
+.ftd-turn-order__mistakes--warn {
+  background: rgba(142, 52, 48, 0.35);
+  color: #ffb4a8;
+}
+
+/* -------------------------------------------------------------- uitslag */
+
+.ftd-result {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  width: 100%;
+  max-width: 420px;
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line-strong);
+  background: linear-gradient(180deg, rgba(58, 44, 34, 0.9), rgba(22, 17, 13, 0.92));
+  box-shadow: var(--shadow);
+  animation: ftd-pop-in 0.28s ease;
+}
+
+.ftd-result--good {
+  border-color: rgba(47, 96, 71, 0.7);
+}
+
+.ftd-result--bad {
+  border-color: rgba(142, 52, 48, 0.7);
+}
+
+.ftd-result--exact {
+  border-color: var(--gold);
+}
+
+.ftd-result__headline {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 6vw, 2.4rem);
+  letter-spacing: 0.05em;
+  color: var(--cream);
+}
+
+.ftd-result__reason {
+  color: var(--text-soft);
+  font-size: 0.98rem;
+}
+
+.ftd-result__drink {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 6vw, 2.3rem);
+  letter-spacing: 0.04em;
+  color: var(--beer);
+}
+
+.ftd-result__none {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  letter-spacing: 0.04em;
+  color: var(--felt);
+}
+
+.ftd-result__dealer-change {
+  padding-top: 6px;
+  border-top: 1px dashed var(--line);
+  color: var(--gold);
+  font-size: 0.94rem;
+}
+
+@keyframes ftd-pop-in {
+  from {
+    transform: scale(0.92);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* --------------------------------------------------------- spelersgsm */
+
+.ftd-player {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  text-align: center;
+  padding: 12px 4px;
+}
+
+.ftd-player__title {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  color: var(--gold);
+}
+
+.ftd-player__tag {
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(58, 44, 34, 0.7);
+  border: 1px solid var(--line-strong);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+.ftd-player__tag--turn {
+  background: linear-gradient(180deg, rgba(231, 154, 37, 0.32), rgba(231, 154, 37, 0.12));
+  border-color: var(--amber-bright);
+  color: var(--cream);
+  animation: ftd-pulse 1.6s ease-in-out infinite;
+}
+
+.ftd-player__card {
+  padding: 6px;
+}
+
+.ftd-player__question {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  letter-spacing: 0.04em;
+  color: var(--cream);
+}
+
+.ftd-player__hint {
+  color: var(--text-soft);
+  font-size: 0.98rem;
+}
+
+/* ------------------------------------------------------------ waardekeuze */
+
+.ftd-rank-picker {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  width: 100%;
+  max-width: 380px;
+}
+
+.ftd-rank-picker__btn {
+  display: grid;
+  gap: 2px;
+  justify-items: center;
+  padding: 10px 0 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong);
+  background: linear-gradient(180deg, rgba(231, 154, 37, 0.22), rgba(58, 44, 34, 0.6));
+  color: var(--cream);
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.12s ease, opacity 0.12s ease;
+}
+
+.ftd-rank-picker__rank {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  letter-spacing: 0.03em;
+}
+
+.ftd-rank-picker__percent {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--amber-bright);
+  letter-spacing: 0.02em;
+}
+
+.ftd-rank-picker__btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: var(--amber-bright);
+}
+
+.ftd-rank-picker__btn:disabled {
+  opacity: 0.28;
+  cursor: not-allowed;
+  background: rgba(58, 44, 34, 0.4);
+}
+
+@keyframes ftd-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(231, 154, 37, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(231, 154, 37, 0);
+  }
+}
+
+/* ------------------------------------------------------------- intro */
+
+/* "Het openen van een spel": kort getoond bij elke nieuwe start. */
+.ftd-intro {
+  position: relative;
+  display: grid;
+  place-items: center;
+  gap: 18px;
+  min-height: 60dvh;
+  padding: 40px 20px;
+  overflow: hidden;
+  text-align: center;
+}
+
+.ftd-intro__spotlight {
+  position: absolute;
+  inset: -20%;
+  z-index: 0;
+  background:
+    radial-gradient(45% 45% at 50% 40%, rgba(231, 154, 37, 0.32), transparent 70%),
+    radial-gradient(60% 50% at 50% 90%, rgba(47, 96, 71, 0.4), transparent 70%);
+  animation: ftd-spotlight-pulse 2.6s ease-in-out infinite;
+}
+
+.ftd-intro__cards {
+  position: relative;
+  z-index: 1;
+  font-size: 2.6rem;
+  letter-spacing: 0.2em;
+  animation: ftd-cards-deal 2.6s ease-in-out infinite;
+}
+
+.ftd-intro__title {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 2px;
+  line-height: 0.94;
+}
+
+.ftd-intro__line {
+  font-family: var(--font-display);
+  font-size: clamp(2.6rem, 13vw, 5.2rem);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0;
+  transform: translateY(14px) scale(0.96);
+  animation: ftd-line-in 0.55s ease forwards;
+}
+
+.ftd-intro__line--fuck {
+  color: var(--cream);
+  animation-delay: 0.05s;
+}
+
+.ftd-intro__line--the {
+  color: var(--gold);
+  font-size: clamp(1.4rem, 6vw, 2.2rem);
+  letter-spacing: 0.4em;
+  animation-delay: 0.25s;
+}
+
+.ftd-intro__line--dealer {
+  background: linear-gradient(180deg, #fff2c9, var(--amber-bright) 55%, #a4650f);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 22px rgba(231, 154, 37, 0.55));
+  animation-delay: 0.45s;
+}
+
+.ftd-intro__subtitle {
+  position: relative;
+  z-index: 1;
+  color: var(--text-soft);
+  font-size: 1.05rem;
+  letter-spacing: 0.06em;
+  opacity: 0;
+  animation: ftd-line-in 0.5s ease forwards;
+  animation-delay: 0.85s;
+}
+
+@keyframes ftd-line-in {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes ftd-cards-deal {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes ftd-spotlight-pulse {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 1;
+  }
+}

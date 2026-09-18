@@ -30,6 +30,8 @@ const registry = new Map();
  * @property {(ctx: { round: any, state: any }) => void} [onRoundStart]
  * @property {(ctx: { round: any, state: any }) => void} [onRoundEnd]
  * @property {(ctx: { round: any, state: any, player: any, action: string, payload: any }) => void} [onPlayerAction]
+ * @property {(ctx: { round: any, state: any, action: string, payload: any }) => ({ ok: true } | { ok: false, error: string })} [onQuizmasterAction]
+ * @property {(ctx: { round: any, state: any, player: any }) => (unknown | null)} [getPrivateState]
  */
 
 /** @param {RoundTypeHandler} handler */
@@ -47,4 +49,32 @@ export function getRoundTypeHandler(id) {
 
 export function listRoundTypes() {
   return [...registry.keys()];
+}
+
+/**
+ * Er draait maar één quiz per serverproces. Rondetypes met een eigen timer
+ * (bv. een rad dat na een paar seconden vanzelf stopt) hebben soms een manier
+ * nodig om buiten een socket-event om een broadcast te forceren; dit geeft ze
+ * een verwijzing naar de ene actieve store zonder dat elke module hem zelf
+ * moet doorgeven.
+ */
+let activeStore = null;
+let activeIo = null;
+
+export function setActiveStore(store) {
+  activeStore = store;
+}
+
+export function getActiveStore() {
+  return activeStore;
+}
+
+/** Nodig wanneer een rondetype rechtstreeks (dus niet als broadcast) iets naar
+ * één specifiek toestel wil sturen, bv. een geheime kaart naar de deler. */
+export function setActiveIo(io) {
+  activeIo = io;
+}
+
+export function getActiveIo() {
+  return activeIo;
 }

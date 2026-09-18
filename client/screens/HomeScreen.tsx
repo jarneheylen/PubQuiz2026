@@ -49,9 +49,15 @@ export function HomeScreen() {
       </div>
 
       <footer className="home__footer">
-        {state && state.players.length > 0 ? (
+        {state && state.players.some((player) => player.connected) ? (
           <span>
-            Al aan tafel: <strong>{state.players.map((player) => player.name).join(', ')}</strong>
+            Al aan tafel:{' '}
+            <strong>
+              {state.players
+                .filter((player) => player.connected)
+                .map((player) => player.name)
+                .join(', ')}
+            </strong>
           </span>
         ) : (
           <span>Nog niemand aangemeld. Wie is de eerste?</span>

@@ -1,0 +1,169 @@
+/* ------------------------------------------------------------------
+   Het publieke scherm (HDMI): grote tv, bekeken van op afstand.
+   Weinig tekst, grote visuals - geen bediening.
+   ------------------------------------------------------------------ */
+
+.app--screen .app__content {
+  max-width: 1500px;
+  padding: 32px 48px 64px;
+}
+
+.screen {
+  display: grid;
+  gap: 32px;
+  justify-items: center;
+  text-align: center;
+  min-height: calc(100dvh - 96px);
+}
+
+.screen__header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.screen__eyebrow {
+  color: var(--text-faint);
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+.screen__title {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 7vw, 5.5rem);
+  letter-spacing: 0.04em;
+  background: linear-gradient(180deg, #fff6e0, var(--amber) 62%, #a4650f);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 12px 34px rgba(231, 154, 37, 0.3));
+}
+
+.screen__subtitle {
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  color: var(--gold);
+  letter-spacing: 0.03em;
+}
+
+.screen__hint {
+  color: var(--text-soft);
+  font-size: 1.2rem;
+}
+
+.screen__stage {
+  display: grid;
+  gap: 28px;
+  justify-items: center;
+  width: 100%;
+}
+
+.screen__stage--lobby {
+  gap: 36px;
+}
+
+.screen__lobby-grid {
+  display: grid;
+  gap: 32px;
+  grid-template-columns: minmax(0, 380px) minmax(0, 480px);
+  align-items: start;
+  justify-content: center;
+  width: 100%;
+}
+
+.screen__lobby-players {
+  text-align: left;
+  padding: 20px 24px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line);
+  background: rgba(22, 17, 13, 0.5);
+}
+
+@media (max-width: 900px) {
+  .screen__lobby-grid {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+  }
+}
+
+/* -------------------------------------------- Fuck the Dealer, groot scherm */
+
+.ftd--screen {
+  gap: 28px;
+}
+
+.ftd-screen__title {
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 6vw, 4rem);
+  letter-spacing: 0.05em;
+  color: var(--gold);
+  text-shadow: 0 0 24px rgba(231, 154, 37, 0.4);
+}
+
+.ftd-screen__subtitle {
+  font-family: var(--font-display);
+  font-size: clamp(1.3rem, 3vw, 1.8rem);
+  color: var(--text-soft);
+}
+
+.ftd-screen__banner {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 5vw, 2.8rem);
+  letter-spacing: 0.04em;
+  color: var(--amber-bright);
+}
+
+.ftd-screen__shot {
+  padding: 8px 20px;
+  border-radius: 999px;
+  background: rgba(231, 154, 37, 0.14);
+  border: 1px solid rgba(233, 201, 127, 0.3);
+  color: var(--text-soft);
+  font-size: 1.05rem;
+}
+
+.ftd-screen__table {
+  padding: 12px;
+}
+
+.ftd-screen__order {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  width: 100%;
+}
+
+.ftd-screen__order-title {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--text-faint);
+}
+
+/* Op de tv bekeken van op afstand: alles wat groter en duidelijker. */
+.ftd-screen__order .ftd-turn-order {
+  gap: 12px;
+}
+
+.ftd-screen__order .ftd-turn-order__item {
+  padding: 12px 18px;
+  font-size: 1.15rem;
+  gap: 10px;
+}
+
+.ftd-screen__order .ftd-turn-order__marker {
+  font-size: 1.3rem;
+}
+
+.ftd-screen__order .ftd-turn-order__tag {
+  font-size: 0.8rem;
+  padding: 3px 10px;
+}
+
+.ftd-screen__order .ftd-turn-order__mistakes {
+  font-size: 0.85rem;
+  padding: 3px 10px;
+}
