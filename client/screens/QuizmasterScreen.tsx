@@ -12,6 +12,7 @@ import { RoundInfo, DrinkResult } from '../components/RoundInfo';
 import { RoundProgress } from '../components/RoundProgress';
 import { JoinInfo } from '../components/JoinInfo';
 import { Scoreboard } from '../components/Scoreboard';
+import { DrinkManager } from '../components/DrinkManager';
 import { Wheel } from '../components/Wheel';
 import { getRoundType } from '../rounds';
 import { getMinigameType } from '../minigames';
@@ -123,14 +124,14 @@ export function QuizmasterScreen() {
 
       <section className="qm__stats" aria-label="Overzicht">
         <div className="stat">
-          <span className="stat__label">Spelers</span>
+          <span className="stat__label">👥 Spelers</span>
           <span className="stat__value">{state.players.length}</span>
           <span className="stat__note">
             {state.players.filter((player) => player.connected).length} online
           </span>
         </div>
         <div className="stat">
-          <span className="stat__label">Huidige ronde</span>
+          <span className="stat__label">🎯 Huidige ronde</span>
           <span className="stat__value">
             {round ? round.number : '-'}
             <small>/{state.rounds.length}</small>
@@ -138,12 +139,12 @@ export function QuizmasterScreen() {
           <span className="stat__note">{round ? round.theme : 'nog niet gestart'}</span>
         </div>
         <div className="stat">
-          <span className="stat__label">Status</span>
+          <span className="stat__label">📢 Status</span>
           <span className="stat__value stat__value--text">{state.status}</span>
           <span className="stat__note">{playedRounds} ronde(s) afgerond</span>
         </div>
-        <div className="stat">
-          <span className="stat__label">Shot deze ronde</span>
+        <div className="stat stat--shot">
+          <span className="stat__label">🥃 Shot deze ronde</span>
           <span className="stat__value stat__value--text">
             {round?.wheelResult
               ? `${round.wheelResult.drinkEmoji} ${round.wheelResult.drinkName}`
@@ -173,7 +174,7 @@ export function QuizmasterScreen() {
                 onClick={actions.startQuiz}
                 disabled={onlineCount === 0}
               >
-                START QUIZ
+                🍻 START QUIZ
               </button>
               {onlineCount === 0 && (
                 <p className="stage__hint">Er is minstens een speler nodig om te starten.</p>
@@ -199,7 +200,7 @@ export function QuizmasterScreen() {
                     Eerst het rad: het bepaalt welke sterke drank deze ronde op tafel komt.
                   </p>
                   <button type="button" className="btn btn--primary btn--huge" onClick={actions.spinWheel}>
-                    DRAAI HET RAD
+                    🎡 DRAAI HET RAD
                   </button>
                 </>
               )}
@@ -213,10 +214,10 @@ export function QuizmasterScreen() {
                   <DrinkResult result={state.wheel.result} />
                   <div className="stage__actions">
                     <button type="button" className="btn btn--ghost" onClick={actions.spinWheel}>
-                      Opnieuw draaien
+                      🎡 Opnieuw draaien
                     </button>
                     <button type="button" className="btn btn--primary btn--huge" onClick={actions.startRound}>
-                      START RONDE {round.number}
+                      ▶️ START RONDE {round.number}
                     </button>
                   </div>
                 </>
@@ -227,7 +228,16 @@ export function QuizmasterScreen() {
           {state.phase === 'round_active' && round && (
             <div className="stage stage--active">
               <RoundInfo round={round} compact />
-              {round.wheelResult && <DrinkResult result={round.wheelResult} size="small" />}
+              {state.wheel.status === 'spinning' ? (
+                <Wheel drinks={state.drinks} wheel={state.wheel} serverOffset={serverOffset} sound={sound} size={220} />
+              ) : (
+                <>
+                  {round.wheelResult && <DrinkResult result={round.wheelResult} size="small" />}
+                  <button type="button" className="btn btn--ghost btn--small" onClick={actions.spinWheel}>
+                    🎡 Rad opnieuw draaien
+                  </button>
+                </>
+              )}
               {QuizmasterView ? (
                 <QuizmasterView round={round} state={state} players={state.players} />
               ) : (
@@ -236,7 +246,7 @@ export function QuizmasterScreen() {
                 </p>
               )}
               <button type="button" className="btn btn--primary btn--huge" onClick={actions.endRound}>
-                BEEINDIG RONDE
+                🏁 BEEINDIG RONDE
               </button>
             </div>
           )}
@@ -254,7 +264,7 @@ export function QuizmasterScreen() {
                   : 'Dat was de laatste ronde van de avond.'}
               </p>
               <button type="button" className="btn btn--primary btn--huge" onClick={actions.nextRound}>
-                {nextRound ? `VOLGENDE RONDE: ${nextRound.theme.toUpperCase()}` : 'QUIZ AFSLUITEN'}
+                {nextRound ? `➡️ VOLGENDE RONDE: ${nextRound.theme.toUpperCase()}` : '🏁 QUIZ AFSLUITEN'}
               </button>
             </div>
           )}
@@ -262,9 +272,9 @@ export function QuizmasterScreen() {
           {state.phase === 'quiz_finished' && (
             <div className="stage stage--finished">
               <span className="stage__eyebrow">Einde</span>
-              <h2 className="stage__title">QUIZ AFGELOPEN</h2>
+              <h2 className="stage__title">🎉 QUIZ AFGELOPEN</h2>
               <p className="stage__text">
-                {state.rounds.length} rondes gespeeld met {state.players.length} spelers.
+                {state.rounds.length} rondes gespeeld met {state.players.length} spelers. 🍻
               </p>
               <ul className="finish-list">
                 {state.rounds.map((item) => (
@@ -281,7 +291,7 @@ export function QuizmasterScreen() {
                 ))}
               </ul>
               <button type="button" className="btn btn--primary btn--huge" onClick={confirmReset}>
-                NIEUWE QUIZ
+                🔄 NIEUWE QUIZ
               </button>
             </div>
           )}
@@ -297,7 +307,7 @@ export function QuizmasterScreen() {
           {state.phase !== 'lobby' && (
             <div className="card">
               <h3 className="card__title">
-                Spelers <span className="card__count">{state.players.length}</span>
+                👥 Spelers <span className="card__count">{state.players.length}</span>
               </h3>
               <PlayerList players={state.players} onKick={actions.kickPlayer} />
             </div>
@@ -305,14 +315,16 @@ export function QuizmasterScreen() {
 
           <Scoreboard players={state.players} drinkLog={state.drinkLog} />
 
+          <DrinkManager drinks={state.drinks} onAdd={actions.addDrink} onRemove={actions.removeDrink} />
+
           <div className="card">
-            <h3 className="card__title">Verloop van de quiz</h3>
+            <h3 className="card__title">📋 Verloop van de quiz</h3>
             <RoundProgress rounds={state.rounds} currentRoundIndex={state.currentRoundIndex} />
           </div>
 
           {roundType && (
             <div className="card card--muted">
-              <h3 className="card__title">Rondetype</h3>
+              <h3 className="card__title">🎲 Rondetype</h3>
               <p className="card__text">
                 <strong>{roundType.label}</strong>
                 {roundType.description ? ` — ${roundType.description}` : ''}

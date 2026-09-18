@@ -14,18 +14,23 @@ export function HomeScreen() {
       </div>
 
       <header className="home__header">
-        <span className="home__eyebrow">Vrijdagavond, vrienden, veel te weinig kennis</span>
         <h1 className="home__title">
           <span className="home__title-line">DE</span>
-          <span className="home__title-line home__title-line--big">PUBQUIZ</span>
+          <span className="home__title-line home__title-line--big neon-flicker">PUBQUIZ</span>
         </h1>
         <p className="home__subtitle">
           {state ? state.quiz.name : 'Quiz wordt geladen...'}
         </p>
+        <div className="home__cheers" aria-hidden="true">
+          <span>🍺</span>
+          <span>🥃</span>
+          <span>🍻</span>
+          <span>🥂</span>
+        </div>
       </header>
 
       <div className="home__choices">
-        <button type="button" className="choice choice--master" onClick={() => chooseRole('quizmaster')}>
+        <button type="button" className="choice choice--master neon-ring" onClick={() => chooseRole('quizmaster')}>
           <span className="choice__icon" aria-hidden="true">
             🎙️
           </span>
@@ -36,7 +41,7 @@ export function HomeScreen() {
           <span className="choice__cta">Naar het dashboard</span>
         </button>
 
-        <button type="button" className="choice choice--player" onClick={() => chooseRole('player')}>
+        <button type="button" className="choice choice--player neon-ring" onClick={() => chooseRole('player')}>
           <span className="choice__icon" aria-hidden="true">
             🍻
           </span>
@@ -51,7 +56,7 @@ export function HomeScreen() {
       <footer className="home__footer">
         {state && state.players.some((player) => player.connected) ? (
           <span>
-            Al aan tafel:{' '}
+            🍻 Al aan tafel:{' '}
             <strong>
               {state.players
                 .filter((player) => player.connected)
@@ -60,7 +65,7 @@ export function HomeScreen() {
             </strong>
           </span>
         ) : (
-          <span>Nog niemand aangemeld. Wie is de eerste?</span>
+          <span>🍺 Nog niemand aangemeld. Wie is de eerste?</span>
         )}
       </footer>
     </div>

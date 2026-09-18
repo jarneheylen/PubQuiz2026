@@ -57,6 +57,9 @@ interface QuizContextValue {
     nextRound: () => void;
     resetQuiz: () => void;
     kickPlayer: (playerId: string) => void;
+    /** Drank toevoegen aan het rad, of verwijderen. */
+    addDrink: (drink: { name: string; emoji?: string; abv?: number }) => void;
+    removeDrink: (drinkId: string) => void;
     /** Start een extra spel (bv. Fuck the Dealer), los van de rondevolgorde. */
     startMinigame: (type: string) => void;
     stopMinigame: () => void;
@@ -233,6 +236,9 @@ export function QuizProvider({ children }: { children: ReactNode }) {
       nextRound: () => socket.emit(Events.QM_NEXT_ROUND),
       resetQuiz: () => socket.emit(Events.QM_RESET),
       kickPlayer: (id: string) => socket.emit(Events.QM_KICK_PLAYER, { playerId: id }),
+      addDrink: (drink: { name: string; emoji?: string; abv?: number }) =>
+        socket.emit(Events.QM_ADD_DRINK, drink),
+      removeDrink: (drinkId: string) => socket.emit(Events.QM_REMOVE_DRINK, { drinkId }),
       startMinigame: (type: string) => socket.emit(Events.QM_START_MINIGAME, { type }),
       stopMinigame: () => socket.emit(Events.QM_STOP_MINIGAME),
     }),

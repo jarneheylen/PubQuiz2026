@@ -55,7 +55,7 @@ export function ScreenScreen() {
             <JoinInfo />
             <div className="screen__lobby-players">
               <h2 className="screen__subtitle">
-                Al aan tafel <span className="card__count">{state.players.length}</span>
+                🍻 Al aan tafel <span className="card__count">{state.players.length}</span>
               </h2>
               <PlayerList players={state.players} emptyText="Nog niemand aangemeld." />
             </div>
@@ -73,7 +73,12 @@ export function ScreenScreen() {
 
       {state.phase === 'round_active' && round && (
         <div className="screen__stage screen__stage--active">
-          {ScreenView ? (
+          {state.wheel.status === 'spinning' ? (
+            <>
+              <span className="screen__eyebrow">Het rad draait opnieuw...</span>
+              <Wheel drinks={state.drinks} wheel={state.wheel} serverOffset={serverOffset} size={420} />
+            </>
+          ) : ScreenView ? (
             <ScreenView round={round} state={state} />
           ) : (
             <>
@@ -94,8 +99,8 @@ export function ScreenScreen() {
 
       {state.phase === 'quiz_finished' && (
         <div className="screen__stage">
-          <h1 className="screen__title">QUIZ AFGELOPEN</h1>
-          <p className="screen__hint">Bedankt voor het spelen!</p>
+          <h1 className="screen__title">🎉 QUIZ AFGELOPEN</h1>
+          <p className="screen__hint">🍻 Bedankt voor het spelen!</p>
         </div>
       )}
     </div>

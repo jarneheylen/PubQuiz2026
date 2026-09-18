@@ -39,7 +39,9 @@ export const players = [
 ];
 
 /**
- * Sterke dranken voor het rad. Toevoegen of verwijderen mag vrij.
+ * Sterke dranken voor het rad. Toevoegen of verwijderen mag vrij - dit kan
+ * ook rechtstreeks tijdens de avond via het scorebord-paneel van de
+ * quizmaster (kaart "Dranken"), zonder de server te herstarten.
  * - name  : wat op het rad en in het resultaat staat
  * - emoji : klein icoontje (mag leeg: '')
  * - color : kleur van het vak op het rad
@@ -48,69 +50,35 @@ export const players = [
  * Tip: 6 tot 10 dranken ziet het mooiste uit op het rad.
  */
 export const drinks = [
-  { id: 'vodka', name: 'Vodka', emoji: '\u{1F9CA}', color: '#ded7c6', abv: 40 },
-  { id: 'tequila', name: 'Tequila', emoji: '\u{1F335}', color: '#d9a52a', abv: 38 },
-  { id: 'rum', name: 'Rum', emoji: '\u{1F965}', color: '#a0521f', abv: 37.5 },
-  { id: 'whisky', name: 'Whisky', emoji: '\u{1F943}', color: '#c1762a', abv: 40 },
-  { id: 'jager', name: 'Jagermeister', emoji: '\u{1F98C}', color: '#31663e', abv: 35 },
-  { id: 'gin', name: 'Gin', emoji: '\u{1F378}', color: '#78b0c6', abv: 37.5 },
+  { id: 'jenever', name: 'Jenever', emoji: '\u{1F943}', color: '#c9d6d9', abv: 35 },
+  { id: 'amaretto', name: 'Amaretto', emoji: '\u{1F330}', color: '#8a4a1f', abv: 28 },
   { id: 'limoncello', name: 'Limoncello', emoji: '\u{1F34B}', color: '#e0c422', abv: 30 },
-  { id: 'sambuca', name: 'Sambuca', emoji: '\u{2615}', color: '#414150', abv: 38 },
+  { id: 'jager', name: 'Jagermeister', emoji: '\u{1F98C}', color: '#31663e', abv: 35 },
+  { id: 'kruidenbitter', name: 'Kruidenbitter', emoji: '\u{1F33F}', color: '#5c3a21', abv: 30 },
+  { id: 'sambuca', name: 'Sambuca', emoji: '\u{2615}', color: '#3a2a4a', abv: 38 },
 ];
 
 /**
  * De rondes van de quiz, in volgorde. Het rondenummer wordt automatisch bepaald.
  * - name        : titel van de ronde
  * - theme       : het thema (groot op het scherm)
- * - explanation : korte uitleg die quizmaster en spelers zien
+ * - explanation : korte uitleg die quizmaster en spelers zien (mag leeg: '')
  * - rules       : lijst met spelregels (mag leeg blijven: [])
  * - type        : rondetype-id (voorlopig allemaal 'manual')
+ *
+ * Uitleg en spelregels blijven hier bewust leeg: de quizmaster geeft dat
+ * mondeling per ronde.
  *
  * Fuck the Dealer (het kaartendrankspel) is GEEN ronde: de quizmaster start
  * dat los van deze lijst, zo vaak hij wil tijdens de avond (knop op het
  * dashboard). Zie server/minigames/ en client/minigames/.
  */
 export const rounds = [
-  {
-    name: 'Ronde 1',
-    theme: 'Muziek',
-    explanation:
-      'We starten zacht: muziek door de jaren heen. Luister goed, want de intros zijn kort.',
-    rules: ['Geen gsm op tafel', 'Antwoorden worden pas na de ronde overlopen'],
-    type: 'manual',
-  },
-  {
-    name: 'Ronde 2',
-    theme: 'Film & Series',
-    explanation:
-      'Van klassiekers tot guilty pleasures: quotes, posters en soundtracks.',
-    rules: ['Titels in het Nederlands of Engels mogen allebei'],
-    type: 'manual',
-  },
-  {
-    name: 'Ronde 3',
-    theme: 'Algemene kennis',
-    explanation:
-      'De klassieke ronde: een mix van geschiedenis, aardrijkskunde, wetenschap en onzin.',
-    rules: [],
-    type: 'manual',
-  },
-  {
-    name: 'Ronde 4',
-    theme: 'Sport',
-    explanation:
-      'Voetbal, wielrennen, en die ene sport waar niemand iets van kent.',
-    rules: [],
-    type: 'manual',
-  },
-  {
-    name: 'Ronde 5',
-    theme: 'Mix & finale',
-    explanation:
-      'De laatste ronde, waar alles nog kan kantelen. Volle inzet gevraagd.',
-    rules: ['Dubbele punten in deze ronde'],
-    type: 'manual',
-  },
+  { name: 'Ronde 1', theme: 'Muziek', explanation: '', rules: [], type: 'manual' },
+  { name: 'Ronde 2', theme: 'Film & Series', explanation: '', rules: [], type: 'manual' },
+  { name: 'Ronde 3', theme: 'Algemene kennis', explanation: '', rules: [], type: 'manual' },
+  { name: 'Ronde 4', theme: 'Sport', explanation: '', rules: [], type: 'manual' },
+  { name: 'Ronde 5', theme: 'Mix & finale', explanation: '', rules: [], type: 'manual' },
 ];
 
 /** Hoe lang het rad draait (in milliseconden). Groter = meer spanning. */

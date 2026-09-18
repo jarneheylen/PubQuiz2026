@@ -10,7 +10,20 @@
   aspect-ratio: 1;
   margin: 0 auto;
   padding: 14px;
+  border-radius: 50%;
   isolation: isolate;
+}
+
+/* Neonrand rond het rad: normaal een zacht randje, tijdens het draaien
+   feller en sneller - dat hoort bij de spanning van het moment. */
+.wheel.neon-ring::before {
+  opacity: 0.5;
+}
+
+.wheel--spinning.neon-ring::before {
+  opacity: 1;
+  filter: blur(6px) saturate(1.5);
+  animation: neon-spin 1.1s linear infinite;
 }
 
 .wheel__glow {

@@ -46,11 +46,7 @@ export function JoinInfo() {
 
   return (
     <div className="join-info">
-      <h3 className="card__title">Spelers laten binnenkomen</h3>
-      <p className="join-info__hint">
-        Laat je vrienden deze QR scannen, of het adres intypen in hun browser.
-        Ze moeten op hetzelfde wifi-netwerk zitten.
-      </p>
+      <h3 className="card__title">🍻 Spelers laten binnenkomen</h3>
 
       {current?.qr && <img className="join-info__qr" src={current.qr} alt={`QR-code naar ${url}`} />}
 

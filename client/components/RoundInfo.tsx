@@ -32,7 +32,7 @@ export function DrinkResult({
   size?: 'large' | 'small';
 }) {
   return (
-    <div className={`drink-result drink-result--${size}`}>
+    <div className={`drink-result drink-result--${size} neon-ring neon-ring--on`}>
       <span className="drink-result__label">{label}</span>
       <span className="drink-result__drink">
         <span className="drink-result__emoji">{result.drinkEmoji}</span>

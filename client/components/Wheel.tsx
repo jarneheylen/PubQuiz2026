@@ -120,7 +120,7 @@ export function Wheel({ drinks, wheel, serverOffset, sound = false, size = 380 }
 
   return (
     <div
-      className={`wheel${spinning ? ' wheel--spinning' : ''}`}
+      className={`wheel neon-ring neon-ring--on${spinning ? ' wheel--spinning' : ''}`}
       style={{ '--wheel-size': `${size}px` } as CSSProperties}
     >
       <div className="wheel__glow" aria-hidden="true" />

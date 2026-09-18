@@ -30,7 +30,7 @@ export function PlayerScreen() {
         </div>
 
         <header className="join__header">
-          <h1 className="join__title">Wie ben jij?</h1>
+          <h1 className="join__title neon-flicker">🍻 Wie ben jij?</h1>
           <p className="join__subtitle">{state.quiz.name}</p>
         </header>
 
@@ -39,7 +39,7 @@ export function PlayerScreen() {
             <button
               key={player.id}
               type="button"
-              className="join__picker-btn"
+              className="join__picker-btn neon-ring"
               disabled={!connected || player.connected}
               onClick={() => joinAsPlayer(player.name)}
             >
@@ -118,7 +118,7 @@ export function PlayerScreen() {
             Leun achterover. Zodra de quizmaster start, verschijnt de eerste ronde hier.
           </p>
           <h3 className="panel__subtitle">
-            Spelers <span className="card__count">{state.players.length}</span>
+            👥 Spelers <span className="card__count">{state.players.length}</span>
           </h3>
           <PlayerList players={state.players} meId={me.id} />
         </section>
@@ -176,7 +176,7 @@ export function PlayerScreen() {
             🏁
           </div>
           <h2 className="panel__title">Quiz afgelopen</h2>
-          <p className="panel__text">Bedankt voor het spelen, {me.name}!</p>
+          <p className="panel__text">🍻 Bedankt voor het spelen, {me.name}!</p>
           <ul className="finish-list">
             {state.rounds.map((item) => (
               <li key={item.id}>
@@ -197,7 +197,7 @@ export function PlayerScreen() {
       {state.phase !== 'lobby' && (
         <section className="panel panel--muted">
           <h3 className="panel__subtitle">
-            Mee aan het spelen <span className="card__count">{state.players.length}</span>
+            👥 Mee aan het spelen <span className="card__count">{state.players.length}</span>
           </h3>
           <PlayerList players={state.players} meId={me.id} />
         </section>

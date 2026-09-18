@@ -131,6 +131,11 @@ export function attachSocketHandlers(io, store) {
       }
     });
 
+    socket.on(Events.QM_ADD_DRINK, (payload = {}) => runQuizmasterAction(() => store.addDrink(payload)));
+    socket.on(Events.QM_REMOVE_DRINK, (payload = {}) =>
+      runQuizmasterAction(() => store.removeDrink(payload.drinkId)),
+    );
+
     // ------------------------------------------ rondetype-specifieke acties
 
     socket.on(Events.QM_ROUND_ACTION, (payload = {}) => {

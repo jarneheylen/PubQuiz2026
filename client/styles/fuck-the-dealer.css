@@ -38,6 +38,7 @@
     radial-gradient(90% 70% at 50% 110%, rgba(47, 96, 71, 0.35), transparent 70%),
     linear-gradient(180deg, rgba(15, 26, 20, 0.55), rgba(10, 8, 6, 0.4));
   border: 1px solid rgba(233, 201, 127, 0.14);
+  box-shadow: 0 0 0 1px rgba(255, 63, 176, 0.1), 0 0 40px rgba(178, 107, 255, 0.12);
 }
 
 .ftd__header {
@@ -288,6 +289,17 @@
   color: var(--cream);
   box-shadow: 0 0 0 2px rgba(231, 154, 37, 0.25);
   transform: scale(1.06);
+  animation: turn-neon-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes turn-neon-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px rgba(231, 154, 37, 0.25), 0 0 10px rgba(47, 230, 255, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 0 2px rgba(231, 154, 37, 0.4), 0 0 20px rgba(47, 230, 255, 0.4);
+  }
 }
 
 .ftd-turn-order__item--dealer {

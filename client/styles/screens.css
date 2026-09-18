@@ -22,15 +22,6 @@
   text-align: center;
 }
 
-.home__eyebrow {
-  display: block;
-  margin-bottom: 10px;
-  color: var(--text-faint);
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.22em;
-}
-
 .home__title {
   display: grid;
   font-family: var(--font-display);
@@ -49,13 +40,49 @@
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 12px 34px rgba(231, 154, 37, 0.3));
+  filter: drop-shadow(0 12px 34px rgba(231, 154, 37, 0.3))
+    drop-shadow(0 0 26px rgba(255, 63, 176, 0.35)) drop-shadow(0 0 46px rgba(47, 230, 255, 0.25));
 }
 
 .home__subtitle {
   margin-top: 12px;
   color: var(--text-soft);
   font-size: 1.06rem;
+}
+
+/* Een vrolijk rijtje glazen als scheiding: puur sfeer, proost naar de avond. */
+.home__cheers {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 16px;
+  font-size: 1.6rem;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.4));
+}
+
+.home__cheers span {
+  display: inline-block;
+  animation: cheers-bob 2.4s ease-in-out infinite;
+}
+
+.home__cheers span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.home__cheers span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+.home__cheers span:nth-child(4) {
+  animation-delay: 0.6s;
+}
+
+@keyframes cheers-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(-6deg);
+  }
 }
 
 .home__choices {
@@ -70,7 +97,7 @@
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-lg);
   background: linear-gradient(180deg, rgba(58, 44, 34, 0.9), rgba(22, 17, 13, 0.92));
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow), inset 0 2px 0 rgba(247, 236, 216, 0.14);
   cursor: pointer;
   text-align: left;
   transition: transform 0.16s ease, box-shadow 0.22s ease, border-color 0.22s ease;
@@ -79,7 +106,7 @@
 .choice:hover {
   transform: translateY(-3px);
   border-color: var(--gold);
-  box-shadow: var(--shadow-lift);
+  box-shadow: var(--shadow-lift), inset 0 2px 0 rgba(247, 236, 216, 0.18);
 }
 
 .choice:focus-visible {
@@ -88,7 +115,15 @@
 }
 
 .choice__icon {
-  font-size: 2.2rem;
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  margin-bottom: 4px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(255, 214, 140, 0.35), rgba(255, 214, 140, 0.05) 70%);
+  border: 1px solid var(--line-strong);
+  font-size: 2rem;
   line-height: 1;
 }
 
@@ -218,6 +253,23 @@
   font-size: 0.8rem;
 }
 
+/* Het gekozen shot mag er ietsje feestelijker uitzien dan de rest. */
+.stat--shot {
+  border-color: rgba(233, 201, 127, 0.4);
+  background: linear-gradient(180deg, rgba(231, 154, 37, 0.14), rgba(22, 17, 13, 0.7));
+  animation: stat-shot-glow 3s ease-in-out infinite;
+}
+
+@keyframes stat-shot-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 1px rgba(231, 154, 37, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 0 1px rgba(231, 154, 37, 0.4), 0 0 22px rgba(231, 154, 37, 0.25);
+  }
+}
+
 .qm__grid {
   display: grid;
   gap: 18px;
@@ -238,7 +290,7 @@
   background:
     radial-gradient(90% 70% at 50% 0%, rgba(231, 154, 37, 0.12), transparent 70%),
     linear-gradient(180deg, rgba(42, 32, 26, 0.85), rgba(16, 11, 9, 0.92));
-  box-shadow: var(--shadow-lift);
+  box-shadow: var(--shadow-lift), inset 0 2px 0 rgba(247, 236, 216, 0.12);
 }
 
 .qm__side {
@@ -385,7 +437,7 @@
   background:
     radial-gradient(90% 70% at 50% 0%, rgba(231, 154, 37, 0.12), transparent 70%),
     linear-gradient(180deg, rgba(42, 32, 26, 0.85), rgba(16, 11, 9, 0.92));
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow), inset 0 2px 0 rgba(247, 236, 216, 0.12);
   text-align: center;
   animation: stage-in 0.35s ease both;
 }
@@ -474,6 +526,7 @@
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  filter: drop-shadow(0 0 20px rgba(255, 63, 176, 0.3)) drop-shadow(0 0 36px rgba(47, 230, 255, 0.2));
 }
 
 .join__subtitle {

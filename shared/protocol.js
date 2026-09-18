@@ -59,6 +59,9 @@ export const Events = {
   QM_NEXT_ROUND: 'quizmaster:next-round',
   QM_RESET: 'quizmaster:reset-quiz',
   QM_KICK_PLAYER: 'quizmaster:kick-player',
+  /** client -> server: drank toevoegen { name, emoji?, abv? } / verwijderen { drinkId } */
+  QM_ADD_DRINK: 'quizmaster:add-drink',
+  QM_REMOVE_DRINK: 'quizmaster:remove-drink',
   /** client -> server: rondetype-specifieke quizmaster-actie */
   QM_ROUND_ACTION: 'quizmaster:round-action',
 

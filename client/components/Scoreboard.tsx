@@ -55,14 +55,21 @@ export function Scoreboard({ players, drinkLog }: { players: Player[]; drinkLog:
 
   return (
     <div className="card">
-      <h3 className="card__title">Scorebord</h3>
+      <h3 className="card__title">🍻 Scorebord</h3>
       {rows.length === 0 ? (
         <p className="card__text">Nog niemand heeft iets moeten drinken.</p>
       ) : (
         <ul className="scoreboard">
-          {rows.map((summary) => (
+          {rows.map((summary, index) => (
             <li className="scoreboard__row" key={summary.playerId}>
-              <span className="scoreboard__name">{nameOf(summary.playerId)}</span>
+              <span className="scoreboard__name">
+                {index === 0 && (
+                  <span className="scoreboard__crown" title="Meeste gedronken tot nu toe">
+                    👑
+                  </span>
+                )}{' '}
+                {nameOf(summary.playerId)}
+              </span>
               <span className="scoreboard__stats">
                 {summary.beerSips > 0 && (
                   <span className="scoreboard__stat">

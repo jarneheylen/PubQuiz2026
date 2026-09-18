@@ -8,6 +8,14 @@ const PHASE_CLASS: Record<QuizPhase, string> = {
   quiz_finished: 'status--finished',
 };
 
+const PHASE_ICON: Record<QuizPhase, string> = {
+  lobby: '🍻',
+  round_intro: '🎡',
+  round_active: '🎯',
+  round_ended: '🍺',
+  quiz_finished: '🎉',
+};
+
 /** De leesbare quizstatus, bv. "Ronde 1 actief". */
 export function StatusBadge({
   phase,
@@ -22,6 +30,7 @@ export function StatusBadge({
   return (
     <span className={`status ${PHASE_CLASS[phase] || ''}`}>
       <span className={`status__dot${live ? ' status__dot--live' : ''}`} aria-hidden="true" />
+      <span aria-hidden="true">{PHASE_ICON[phase] || '🍺'}</span>
       {status}
     </span>
   );

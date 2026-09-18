@@ -73,6 +73,20 @@ function buildDrinks() {
   }));
 }
 
+/** Kleuren voor rad-vakken van dranken die de quizmaster zelf toevoegt. */
+const DRINK_PALETTE = [
+  '#d9a52a',
+  '#a0521f',
+  '#c1762a',
+  '#31663e',
+  '#78b0c6',
+  '#e0c422',
+  '#8e3430',
+  '#5c3a21',
+  '#414150',
+  '#6b8f71',
+];
+
 function idleWheel(spinId = 0) {
   return {
     status: WheelStatus.IDLE,
@@ -252,6 +266,37 @@ export function createQuizStore() {
     return playerToSocket.get(playerId) || null;
   }
 
+  // -------------------------------------------------------------- dranken
+
+  /**
+   * De quizmaster vult de lijst met sterke dranken aan tijdens de avond
+   * (bv. als er iets uitverkocht is): meteen zichtbaar op het rad van elke
+   * volgende ronde. Kleur kiest de quizmaster niet zelf - dat houdt het
+   * eenvoudig - maar rouleert uit een vast palet.
+   */
+  function addDrink({ name, emoji, abv }) {
+    const cleanName = String(name || '').trim();
+    if (!cleanName) return fail('Geef een naam op voor de drank.');
+    drinks.push({
+      id: randomUUID(),
+      name: cleanName,
+      emoji: String(emoji || '').trim() || '\u{1F943}',
+      color: DRINK_PALETTE[drinks.length % DRINK_PALETTE.length],
+      abv: Number(abv) || 0,
+    });
+    emit();
+    return ok();
+  }
+
+  function removeDrink(drinkId) {
+    if (drinks.length <= 1) return fail('Er moet minstens één drank overblijven.');
+    const index = drinks.findIndex((drink) => drink.id === drinkId);
+    if (index === -1) return fail('Die drank bestaat niet.');
+    drinks.splice(index, 1);
+    emit();
+    return ok();
+  }
+
   // ------------------------------------------------------------ quizverloop
 
   function enterRoundIntro(index) {
@@ -276,8 +321,10 @@ export function createQuizStore() {
   }
 
   function spinWheel() {
-    if (phase !== QuizPhase.ROUND_INTRO) {
-      return fail('Het rad draait enkel bij de start van een ronde.');
+    // Ook tijdens een lopende ronde mag de quizmaster opnieuw draaien, bv. als
+    // de eerste drank toch niet meer voorradig is.
+    if (phase !== QuizPhase.ROUND_INTRO && phase !== QuizPhase.ROUND_ACTIVE) {
+      return fail('Het rad draait enkel tijdens een ronde.');
     }
     if (wheel.status === WheelStatus.SPINNING) {
       return fail('Het rad draait al.');
@@ -421,6 +468,9 @@ export function createQuizStore() {
     getPlayerBySocket,
     getSocketIdForPlayer,
     recordDrink,
+    // dranken
+    addDrink,
+    removeDrink,
     // quizverloop
     startQuiz,
     spinWheel,

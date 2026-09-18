@@ -20,7 +20,7 @@ export function ResultBanner({ result, players }: { result: LastResult; players:
   const drinkerName = result.drinker === 'dealer' ? 'DE DELER' : guesser.toUpperCase();
 
   return (
-    <div className={`ftd-result ftd-result--${tone}`}>
+    <div className={`ftd-result ftd-result--${tone}${tone === 'exact' ? ' neon-ring neon-ring--on' : ''}`}>
       <span className="ftd-result__headline">{headline}</span>
       <PlayingCard card={result.card} size="small" />
       <p className="ftd-result__reason">

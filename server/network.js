@@ -6,19 +6,26 @@
 import os from 'node:os';
 import QRCode from 'qrcode';
 
+/** Naam van bekende VPN/tunnel-adapters: geen echt lokaal netwerk, spelers
+ * op dezelfde wifi kunnen dit adres nooit bereiken. */
+const VIRTUAL_ADAPTER_NAME = /vpn|nordlynx|wireguard|tailscale|zerotier|tap\d*|tun\d*|ppp|hyper-v|virtualbox|vmware|docker/i;
+
 /** Alle IPv4-adressen van dit toestel op het lokale netwerk. */
 export function getLanAddresses() {
   const addresses = [];
-  for (const interfaces of Object.values(os.networkInterfaces())) {
+  for (const [name, interfaces] of Object.entries(os.networkInterfaces())) {
+    if (VIRTUAL_ADAPTER_NAME.test(name)) continue;
     for (const details of interfaces || []) {
-      if (details.family === 'IPv4' && !details.internal) {
-        addresses.push(details.address);
-      }
+      if (details.family !== 'IPv4' || details.internal) continue;
+      // VPN/tunnel-adapters geven vaak een nep MAC-adres mee (allemaal
+      // nullen) - een echte netwerkkaart heeft dat nooit.
+      if (details.mac === '00:00:00:00:00:00') continue;
+      addresses.push(details.address);
     }
   }
   // Thuiswifi (192.168.x.x) eerst, dan gsm-hotspots (172.16-31.x.x), dan de
-  // rest. VPN-adapters zitten vaak in 10.x.x.x, dus die staan achteraan.
-  // De quizmaster kan in het dashboard altijd zelf een ander adres kiezen.
+  // rest. De quizmaster kan in het dashboard altijd zelf een ander adres
+  // kiezen als er toch nog meerdere overblijven.
   return addresses.sort((a, b) => score(a) - score(b));
 }
 
